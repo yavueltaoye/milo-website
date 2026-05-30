@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { Orbe } from "@/components/chrome/Orbe";
 import { MenuOverlay } from "@/components/chrome/MenuOverlay";
 import { ToggleSonido } from "@/components/chrome/ToggleSonido";
@@ -26,21 +27,28 @@ export default function Home() {
         </div>
       )}
 
-      {/* Fixed chrome */}
-      <Orbe />
-      <ToggleVista value={view} onChange={setView} />
+      {/* Fixed chrome — adapts tone to the active view's surface */}
+      <Orbe variant={view === "list" ? "petroleum" : "ivory"} />
+      <ToggleVista
+        value={view}
+        onChange={setView}
+        className={view === "list" ? "text-petroleum" : undefined}
+      />
 
       <button
         type="button"
         onClick={() => setMenuOpen(true)}
-        className="fixed right-(--gutter) top-5 z-50 flex items-center gap-2 text-sm tracking-wide text-ivory transition-opacity duration-200 hover:opacity-70"
+        className={cn(
+          "fixed right-(--gutter) top-5 z-50 flex items-center gap-2 text-sm tracking-wide transition-opacity duration-200 hover:opacity-70",
+          view === "list" ? "text-petroleum" : "text-ivory",
+        )}
       >
         menu <span className="opacity-50">•</span>
       </button>
 
       <MenuOverlay open={menuOpen} onClose={() => setMenuOpen(false)} />
       <ToggleSonido />
-      <DiscoDiario />
+      <DiscoDiario tone={view === "list" ? "petroleum" : "ivory"} />
     </main>
   );
 }

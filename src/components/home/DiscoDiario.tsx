@@ -6,15 +6,23 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 const ORBIT = "diario • 2026 • diario • 2026 • ";
 
+type DiscoDiarioProps = {
+  /** Text/border tone: ivory over dark (default), petroleum over light. */
+  tone?: "ivory" | "petroleum";
+};
+
 /**
  * Small rotating disc fixed bottom-left: a circular thumbnail framed by
  * orbital text that turns slowly, linking to the journal. The spin pauses
  * under prefers-reduced-motion.
  */
-export function DiscoDiario() {
+export function DiscoDiario({ tone = "ivory" }: DiscoDiarioProps) {
   const reduced = usePrefersReducedMotion();
   const letters = ORBIT.split("");
   const step = 360 / letters.length;
+  const textTone = tone === "petroleum" ? "text-petroleum/80" : "text-ivory/80";
+  const borderTone =
+    tone === "petroleum" ? "border-petroleum/30" : "border-ivory/30";
 
   return (
     <Link
@@ -37,7 +45,7 @@ export function DiscoDiario() {
           {letters.map((char, index) => (
             <span
               key={index}
-              className="absolute left-1/2 top-1/2 text-[9px] uppercase tracking-[0.05em] text-ivory/80"
+              className={`absolute left-1/2 top-1/2 text-[9px] uppercase tracking-[0.05em] ${textTone}`}
               style={{
                 transform: `translate(-50%, -50%) rotate(${index * step}deg) translateY(-44px)`,
                 transformOrigin: "center",
@@ -48,7 +56,7 @@ export function DiscoDiario() {
           ))}
         </div>
 
-        <div className="absolute left-1/2 top-1/2 h-12 w-12 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border border-ivory/30">
+        <div className={`absolute left-1/2 top-1/2 h-12 w-12 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border ${borderTone}`}>
           <Image
             src="/images/projects/tomo/hero.jpg"
             alt=""
