@@ -3,13 +3,16 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import * as THREE from "three";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { BokehPass } from "three/examples/jsm/postprocessing/BokehPass.js";
 import { PROJECTS, type Project } from "@/data/projects";
 import { useScrollRotation } from "@/hooks/useScrollRotation";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { TarjetaProyecto } from "./TarjetaProyecto";
 
-const CARD_W = 1.6;
-const CARD_H = 2.0;
+const CARD_W = 2.2;
+const CARD_H = 2.75; // 4:5
 
 /** Deterministic pseudo-random in [0,1) seeded by an integer. No per-frame RNG. */
 function seeded(n: number): number {
@@ -19,19 +22,16 @@ function seeded(n: number): number {
 
 type PlacedCard = {
   mesh: THREE.Mesh;
-  baseX: number;
-  baseY: number;
-  baseZ: number;
-  radius: number;
-  orbit: number;
+  base: THREE.Vector3;
+  baseScale: number;
   drift: number;
   phase: number;
 };
 
 /**
- * Deterministically scatter the projects into a galaxy-like cloud. Each card
- * gets a fixed radius / angle / depth derived only from its index, so the
- * layout is stable across renders and SSR-safe.
+ * Scatter the projects into a deep 3D cloud. Each card gets a fixed position,
+ * a fixed individual 3D tilt (NOT camera-facing), and a depth-based scale —
+ * all derived only from its index, so the layout is stable / SSR-safe.
  */
 function placeCards(
   projects: Project[],
@@ -44,45 +44,57 @@ function placeCards(
   const placed: PlacedCard[] = [];
   const count = projects.length;
 
-  projects.forEach((project, i) => {
-    const angle = (i / count) * Math.PI * 2 + seeded(i) * 0.8;
-    const radius = 2.6 + seeded(i + 11) * 3.4;
-    const y = (seeded(i + 23) - 0.5) * 6.0;
-    const z = (seeded(i + 31) - 0.5) * 5.0;
+  // Jittered grid → even coverage across the frame (like the reference cloud),
+  // then deep Z + organic jitter so it never reads as a flat grid.
+  const cols = 4;
+  const rows = Math.ceil(count / cols);
 
-    const x = Math.cos(angle) * radius;
-    const baseY = y;
-    const baseZ = Math.sin(angle) * radius * 0.6 + z;
+  projects.forEach((project, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const x =
+      ((col - (cols - 1) / 2) / ((cols - 1) / 2)) * 7.6 +
+      (seeded(i + 3) - 0.5) * 2.2;
+    const y =
+      (((rows - 1) / 2 - row) / ((rows - 1) / 2)) * 4.6 +
+      (seeded(i + 23) - 0.5) * 1.8;
+    const z = (seeded(i + 31) - 0.5) * 9.5; // deep → strong perspective + DOF
 
     const texture = textureLoader.load(project.hero);
     texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = 4;
     textures.push(texture);
 
     const geometry = new THREE.PlaneGeometry(CARD_W, CARD_H);
     geometries.push(geometry);
 
+    // Opaque, full-bleed image. Dimming is done via .color, not opacity, so the
+    // depth buffer stays intact for the depth-of-field pass.
     const material = new THREE.MeshBasicMaterial({
       map: texture,
-      transparent: true,
-      opacity: 1,
+      side: THREE.DoubleSide,
+      toneMapped: false,
     });
     materials.push(material);
 
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, baseY, baseZ);
-    mesh.rotation.z = (seeded(i + 41) - 0.5) * 0.5;
+    mesh.position.set(x, y, z);
+    // Fixed individual tilt in 3D — this is what makes them read as a galaxy.
+    mesh.rotation.x = (seeded(i + 41) - 0.5) * 0.7;
+    mesh.rotation.y = (seeded(i + 47) - 0.5) * 1.0;
+    mesh.rotation.z = (seeded(i + 53) - 0.5) * 0.45;
+
+    const baseScale = 0.85 + seeded(i + 61) * 0.5;
+    mesh.scale.setScalar(baseScale);
     mesh.userData.slug = project.slug;
     group.add(mesh);
 
     placed.push({
       mesh,
-      baseX: x,
-      baseY,
-      baseZ,
-      radius,
-      orbit: angle,
-      drift: 0.12 + seeded(i + 53) * 0.18,
-      phase: seeded(i + 67) * Math.PI * 2,
+      base: new THREE.Vector3(x, y, z),
+      baseScale,
+      drift: 0.1 + seeded(i + 67) * 0.16,
+      phase: seeded(i + 71) * Math.PI * 2,
     });
   });
 
@@ -90,12 +102,11 @@ function placeCards(
 }
 
 /**
- * C4 centerpiece — the 12 projects floating as 4:5 cards in a WebGL galaxy.
- * The whole group rotates as a slow downward tornado driven by
- * {@link useScrollRotation}; hovering a card lifts and brightens it while the
- * rest dim, and clicking opens the project. Heavy WebGL only runs on `md+`;
- * mobile and reduced-motion fall back to a stacked DOM grid of cards. Renderer
- * creation is guarded so a missing/zero-size WebGL context never throws.
+ * The 12 projects floating as 4:5 cards in a WebGL galaxy with depth-of-field.
+ * Each card holds a fixed 3D tilt; the whole cloud spins as a slow downward
+ * tornado driven by {@link useScrollRotation}. Hover lifts + sharpens a card
+ * and dims the rest; click opens the project. Desktop (`md+`) only; mobile and
+ * reduced-motion fall back to a stacked DOM grid.
  */
 export function Constelacion() {
   const router = useRouter();
@@ -104,7 +115,6 @@ export function Constelacion() {
   const angleRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Mirror the live rotation angle into a ref the rAF loop can read.
   useEffect(() => {
     angleRef.current = angle;
   }, [angle]);
@@ -113,7 +123,6 @@ export function Constelacion() {
     const container = containerRef.current;
     if (!container) return;
 
-    // Bail on zero-size containers (hidden on mobile / jsdom).
     const width = container.clientWidth;
     const height = container.clientHeight;
     if (width === 0 || height === 0) return;
@@ -122,24 +131,23 @@ export function Constelacion() {
     const geometries: THREE.BufferGeometry[] = [];
     const materials: THREE.Material[] = [];
     let renderer: THREE.WebGLRenderer | null = null;
+    let composer: EffectComposer | null = null;
     let frame = 0;
 
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer = new THREE.WebGLRenderer({ antialias: true });
     } catch {
-      // No WebGL context (e.g. jsdom / unsupported browser) — fail silently;
-      // the DOM fallback grid still renders.
-      return;
+      return; // No WebGL — DOM fallback still renders.
     }
 
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
-    renderer.setClearColor(0x000000, 0);
+    renderer.setClearColor(0x000000, 1);
     container.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
-    camera.position.set(0, 0, 12);
+    const camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 100);
+    camera.position.set(0, 0, 13);
 
     const group = new THREE.Group();
     scene.add(group);
@@ -153,32 +161,39 @@ export function Constelacion() {
       materials,
     );
 
+    // Depth-of-field: sharp at the cloud centre, blurry toward near/far.
+    composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    const bokeh = new BokehPass(scene, camera, {
+      focus: 13.0,
+      aperture: 0.00028,
+      maxblur: 0.012,
+    });
+    composer.addPass(bokeh);
+    composer.setSize(width, height);
+
     const raycaster = new THREE.Raycaster();
-    const pointer = new THREE.Vector2();
+    const pointer = new THREE.Vector2(2, 2); // off-screen until first move
     let hovered: THREE.Mesh | null = null;
-    const pointerNDC = new THREE.Vector2(2, 2); // off-screen until first move
+    const white = new THREE.Color(0xffffff);
+    const dim = new THREE.Color(0x4a4a4a);
 
     const onPointerMove = (event: PointerEvent) => {
       const rect = renderer!.domElement.getBoundingClientRect();
-      pointerNDC.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      pointerNDC.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-      pointer.x = pointerNDC.x;
-      pointer.y = pointerNDC.y;
+      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     };
-
     const onClick = () => {
-      if (hovered) {
-        const slug = hovered.userData.slug as string | undefined;
-        if (slug) router.push(`/proyectos/${slug}`);
-      }
+      const slug = hovered?.userData.slug as string | undefined;
+      if (slug) router.push(`/proyectos/${slug}`);
     };
-
     const onResize = () => {
-      if (!renderer) return;
+      if (!renderer || !composer) return;
       const w = container.clientWidth;
       const h = container.clientHeight;
       if (w === 0 || h === 0) return;
       renderer.setSize(w, h);
+      composer.setSize(w, h);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
     };
@@ -192,12 +207,11 @@ export function Constelacion() {
     const render = () => {
       const t = clock.getElapsedTime();
 
-      // Tornado: tilt the group and rotate it by the accumulated angle so
-      // lower / outer cards sweep the widest arc. Idle keeps spinning down.
+      // Tornado spin: rotate the cloud about a slightly tilted vertical axis.
       group.rotation.y = angleRef.current;
-      group.rotation.x = reduced ? 0.18 : 0.18 + Math.sin(t * 0.15) * 0.04;
+      group.rotation.x = reduced ? 0.0 : Math.sin(t * 0.12) * 0.05;
+      group.rotation.z = reduced ? 0.0 : Math.sin(t * 0.08) * 0.03;
 
-      // Raycast for hover.
       raycaster.setFromCamera(pointer, camera);
       const hits = raycaster.intersectObjects(group.children, false);
       const next = (hits[0]?.object as THREE.Mesh | undefined) ?? null;
@@ -207,38 +221,28 @@ export function Constelacion() {
       }
 
       cards.forEach((card) => {
-        const drift = reduced ? 0 : card.drift;
-        // Subtle per-card orbital + sinusoidal drift, deterministic by phase.
-        card.mesh.position.x =
-          card.baseX + Math.cos(t * 0.3 + card.phase) * drift;
-        card.mesh.position.y =
-          card.baseY + Math.sin(t * 0.4 + card.phase) * drift;
-        card.mesh.position.z =
-          card.baseZ + Math.sin(t * 0.25 + card.phase) * drift * 0.5;
+        const d = reduced ? 0 : card.drift;
+        card.mesh.position.set(
+          card.base.x + Math.cos(t * 0.25 + card.phase) * d,
+          card.base.y + Math.sin(t * 0.32 + card.phase) * d,
+          card.base.z + Math.sin(t * 0.2 + card.phase) * d * 0.5,
+        );
 
-        // Always face roughly toward the camera, with a touch of individuality.
-        card.mesh.lookAt(camera.position);
-        card.mesh.rotation.z += (seeded(card.orbit) - 0.5) * 0.06;
-
-        const material = card.mesh.material as THREE.MeshBasicMaterial;
+        const mat = card.mesh.material as THREE.MeshBasicMaterial;
         const isHovered = card.mesh === hovered;
-        const targetScale = isHovered ? 1.18 : 1;
-        const targetOpacity = hovered ? (isHovered ? 1 : 0.45) : 1;
+        const targetScale = card.baseScale * (isHovered ? 1.22 : 1);
         card.mesh.scale.setScalar(
           THREE.MathUtils.lerp(card.mesh.scale.x, targetScale, 0.12),
         );
-        material.opacity = THREE.MathUtils.lerp(
-          material.opacity,
-          targetOpacity,
-          0.12,
-        );
+        // Dim non-hovered cards while something is hovered (color, not opacity).
+        const target = !hovered || isHovered ? white : dim;
+        mat.color.lerp(target, 0.12);
       });
 
-      renderer!.render(scene, camera);
+      composer!.render();
     };
 
     if (reduced) {
-      // Static single frame, no animation loop.
       group.rotation.y = angleRef.current;
       render();
     } else {
@@ -257,6 +261,7 @@ export function Constelacion() {
       geometries.forEach((g) => g.dispose());
       materials.forEach((m) => m.dispose());
       textures.forEach((tex) => tex.dispose());
+      composer?.dispose();
       if (renderer) {
         renderer.dispose();
         if (renderer.domElement.parentNode === container) {
@@ -264,24 +269,12 @@ export function Constelacion() {
         }
       }
     };
-    // `reduced` rebuilds the scene; the live angle is read via angleRef inside
-    // the loop, never as a dependency, so the rAF loop is stable.
   }, [reduced, router]);
 
   return (
     <>
       {/* WebGL galaxy — desktop only. */}
-      <div className="relative hidden h-screen w-full overflow-hidden md:block">
-        {/* Faint petroleum grid behind the (transparent) canvas. */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-[0.06]"
-          style={{
-            backgroundImage:
-              "linear-gradient(var(--milo-petroleum) 1px, transparent 1px), linear-gradient(90deg, var(--milo-petroleum) 1px, transparent 1px)",
-            backgroundSize: "64px 64px",
-          }}
-        />
+      <div className="relative hidden h-screen w-full overflow-hidden bg-milo-black md:block">
         <div ref={containerRef} className="absolute inset-0" />
       </div>
 
