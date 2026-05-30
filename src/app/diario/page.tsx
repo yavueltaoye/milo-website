@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { InteriorNav } from "@/components/chrome/InteriorNav";
 import { Listado } from "@/components/diario/Listado";
+import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Diario — MILO",
@@ -24,6 +25,7 @@ export default function DiarioPage() {
         </header>
         <Listado />
       </main>
+      <Footer />
     </>
   );
 }

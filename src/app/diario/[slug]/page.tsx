@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { JOURNAL } from "@/data/journal";
 import { InteriorNav } from "@/components/chrome/InteriorNav";
 import { Entrada } from "@/components/diario/Entrada";
+import { Footer } from "@/components/Footer";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -40,6 +41,7 @@ export default async function EntradaPage({ params }: PageProps) {
           <Link href="/diario">← Volver al diario</Link>
         </p>
       </main>
+      <Footer />
     </>
   );
 }

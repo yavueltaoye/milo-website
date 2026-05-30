@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Orbe } from "@/components/chrome/Orbe";
 import { IndiceProyectos } from "@/components/home/IndiceProyectos";
+import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Proyectos — MILO Estudio",
@@ -16,6 +17,7 @@ export default function ProyectosPage() {
         <h1 className="projects__title">Proyectos</h1>
       </header>
       <IndiceProyectos />
+      <Footer />
     </main>
   );
 }

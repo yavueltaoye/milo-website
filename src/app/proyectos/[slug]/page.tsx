@@ -7,6 +7,7 @@ import { FichaTecnica } from "@/components/proyecto/FichaTecnica";
 import { Galeria } from "@/components/proyecto/Galeria";
 import { Cita } from "@/components/proyecto/Cita";
 import { NextPrev } from "@/components/proyecto/NextPrev";
+import { Footer } from "@/components/Footer";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -54,6 +55,7 @@ export default async function ProyectoPage({ params }: PageProps) {
         <Cita quote={project.quote} />
         <NextPrev current={project} />
       </main>
+      <Footer />
     </>
   );
 }

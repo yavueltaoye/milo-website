@@ -3,6 +3,7 @@ import { InteriorNav } from "@/components/chrome/InteriorNav";
 import { Columnas } from "@/components/sobre/Columnas";
 import { Cifras } from "@/components/sobre/Cifras";
 import { Fundadores } from "@/components/sobre/Fundadores";
+import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Sobre Nosotros — MILO",
@@ -30,6 +31,7 @@ export default function SobreNosotrosPage() {
         <Cifras />
         <Fundadores />
       </main>
+      <Footer />
     </>
   );
 }
