@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import * as THREE from "three";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
@@ -18,6 +19,25 @@ const CARD_H = 2.75; // 4:5
 function seeded(n: number): number {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return x - Math.floor(x);
+}
+
+/**
+ * A 4:5 plane gently bowed toward the camera (convex), so cards read like
+ * curved pages instead of flat rectangles — the subtle curvature in the
+ * reference that sells the tornado depth.
+ */
+function makeCardGeometry(): THREE.PlaneGeometry {
+  const geo = new THREE.PlaneGeometry(CARD_W, CARD_H, 24, 2);
+  const pos = geo.attributes.position;
+  const halfW = CARD_W / 2;
+  const bend = 0.42;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    pos.setZ(i, bend * (1 - (x / halfW) ** 2));
+  }
+  pos.needsUpdate = true;
+  geo.computeVertexNormals();
+  return geo;
 }
 
 type PlacedCard = {
@@ -65,7 +85,7 @@ function placeCards(
     texture.anisotropy = 4;
     textures.push(texture);
 
-    const geometry = new THREE.PlaneGeometry(CARD_W, CARD_H);
+    const geometry = makeCardGeometry();
     geometries.push(geometry);
 
     // Opaque, full-bleed image. Dimming is done via .color, not opacity, so the
@@ -115,6 +135,9 @@ export function Constelacion() {
   const angle = useScrollRotation();
   const angleRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
+  const hoveredProject =
+    PROJECTS.find((p) => p.slug === hoveredSlug) ?? null;
 
   useEffect(() => {
     angleRef.current = angle;
@@ -221,6 +244,7 @@ export function Constelacion() {
       if (next !== hovered) {
         hovered = next;
         container.style.cursor = hovered ? "pointer" : "default";
+        setHoveredSlug((next?.userData.slug as string | undefined) ?? null);
       }
 
       cards.forEach((card) => {
@@ -289,6 +313,24 @@ export function Constelacion() {
           }}
         />
         <div ref={containerRef} className="absolute inset-0" />
+
+        {/* Hover pill — project thumbnail + name, bottom-center (like the reference). */}
+        {hoveredProject && (
+          <div className="pointer-events-none absolute bottom-7 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-full bg-paper py-2 pl-2 pr-5 shadow-xl">
+            <span className="relative block h-9 w-9 shrink-0 overflow-hidden rounded-full">
+              <Image
+                src={hoveredProject.hero}
+                alt=""
+                fill
+                sizes="36px"
+                className="object-cover"
+              />
+            </span>
+            <span className="text-sm font-medium tracking-tight text-petroleum">
+              {hoveredProject.title}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* DOM fallback — mobile. */}
