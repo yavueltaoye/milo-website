@@ -14,7 +14,13 @@ import { TarjetaProyecto } from "./TarjetaProyecto";
 
 const CARD_W = 2.8;
 const CARD_H = 1.75; // 16:10
-const RADIUS = 4.4;
+
+// The descending helix the cards travel along.
+const TURNS = 1.35; // how many turns the visible spiral spans
+const R_TOP = 4.7; // wider at the top
+const R_BOTTOM = 2.9; // narrower at the bottom (funnel)
+const H_TOP = 4.6;
+const H_RANGE = 9.2; // top (+4.6) → bottom (-4.6)
 
 /** Deterministic pseudo-random in [0,1) seeded by an integer. No per-frame RNG. */
 function seeded(n: number): number {
@@ -22,16 +28,18 @@ function seeded(n: number): number {
   return x - Math.floor(x);
 }
 
+const smoothstep = (e0: number, e1: number, x: number) => {
+  const t = THREE.MathUtils.clamp((x - e0) / (e1 - e0), 0, 1);
+  return t * t * (3 - 2 * t);
+};
+
 /** Lightweight texture URL via the Next image optimizer (≈80KB, not the 2-3MB
  *  original). 640 / q75 are Next's default-allowed width and quality. */
 function texUrl(src: string): string {
   return `/_next/image?url=${encodeURIComponent(src)}&w=640&q=75`;
 }
 
-/**
- * 4:5… no — a landscape plane bowed CONVEX (centre toward the camera) so each
- * card wraps the outside of the tornado column it sits on.
- */
+/** A landscape plane bowed CONVEX so each card wraps the outside of the column. */
 function makeCardGeometry(): THREE.PlaneGeometry {
   const geo = new THREE.PlaneGeometry(CARD_W, CARD_H, 28, 2);
   const pos = geo.attributes.position;
@@ -46,38 +54,28 @@ function makeCardGeometry(): THREE.PlaneGeometry {
   return geo;
 }
 
-type PlacedCard = {
+type HelixCard = {
   mesh: THREE.Mesh;
-  baseY: number;
+  /** Fixed phase offset along the helix (0..1). */
+  p: number;
+  tiltX: number;
+  tiltZ: number;
   phase: number;
-  appearAt: number;
 };
 
-/**
- * Arrange the projects on a vertical funnel (a cone, narrower at the bottom).
- * Each card orbits the central axis and faces OUTWARD, so when the group spins
- * the cloud reads as a turning tornado. Layout is seeded → stable / SSR-safe.
- */
-function placeCards(
+/** Build the 12 cards, evenly spaced along the helix by phase. */
+function buildCards(
   projects: Project[],
   group: THREE.Group,
   loader: THREE.TextureLoader,
   textures: THREE.Texture[],
   geometries: THREE.BufferGeometry[],
   materials: THREE.Material[],
-): PlacedCard[] {
-  const placed: PlacedCard[] = [];
+): HelixCard[] {
+  const cards: HelixCard[] = [];
   const count = projects.length;
 
   projects.forEach((project, i) => {
-    const theta = (i / count) * Math.PI * 2 + (seeded(i) - 0.5) * 0.5;
-    const y = (seeded(i + 23) - 0.5) * 7.2;
-    // Funnel: radius shrinks toward the bottom.
-    const coneR =
-      (RADIUS + (seeded(i + 11) - 0.5) * 0.7) * (0.62 + 0.38 * ((y + 3.6) / 7.2));
-    const x = Math.sin(theta) * coneR;
-    const z = Math.cos(theta) * coneR;
-
     const texture = loader.load(texUrl(project.hero), (tex) => {
       const img = tex.image as { width: number; height: number } | undefined;
       if (!img) return;
@@ -105,32 +103,28 @@ function placeCards(
     materials.push(material);
 
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(x, y, z);
-    mesh.rotation.y = theta; // face outward from the column
-    mesh.rotation.x = (seeded(i + 41) - 0.5) * 0.12;
-    mesh.rotation.z = (seeded(i + 53) - 0.5) * 0.08;
     mesh.scale.setScalar(0.001);
     mesh.userData.slug = project.slug;
     group.add(mesh);
 
-    placed.push({
+    cards.push({
       mesh,
-      baseY: y,
+      p: i / count,
+      tiltX: (seeded(i + 41) - 0.5) * 0.1,
+      tiltZ: (seeded(i + 53) - 0.5) * 0.06,
       phase: seeded(i + 71) * Math.PI * 2,
-      appearAt: i * 0.06,
     });
   });
 
-  return placed;
+  return cards;
 }
 
-const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
-
 /**
- * The 12 projects turning as a tornado of curved, uniform landscape cards with
- * depth-of-field (front crisp, back soft). Scroll drives the spin over a slow
- * idle rotation; hover surfaces a name pill; click opens the project. Desktop
- * only; mobile / reduced-motion fall back to a stacked DOM grid.
+ * The 12 projects as a TORNADO: cards travel a descending helix, turning
+ * counter-clockwise and spiralling down, each curved to wrap the column with
+ * depth-of-field (front crisp, back soft). Scroll speeds / reverses the
+ * descent over a slow idle. Hover surfaces a name pill; click opens the project.
+ * Desktop only; mobile / reduced-motion fall back to a stacked DOM grid.
  */
 export function Tornado() {
   const router = useRouter();
@@ -177,7 +171,7 @@ export function Tornado() {
     const group = new THREE.Group();
     scene.add(group);
 
-    const cards = placeCards(
+    const cards = buildCards(
       PROJECTS,
       group,
       new THREE.TextureLoader(),
@@ -186,7 +180,6 @@ export function Tornado() {
       materials,
     );
 
-    // Depth-of-field: keep the front of the column crisp, blur only the back.
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
     const bokeh = new BokehPass(scene, camera, {
@@ -228,15 +221,32 @@ export function Tornado() {
     window.addEventListener("resize", onResize);
 
     const clock = new THREE.Clock();
-    // Smooth the spin so it never snaps (organic, not robotic).
-    let spin = angleRef.current;
+    // `flow` is the descent position (in turns). Idle advances it gently; the
+    // scroll hook adds to it. Smoothed so motion is organic, never snappy.
+    let flowSmooth = 0;
+    const start = performance.now();
+
+    const placeCard = (card: HelixCard, flow: number, t: number) => {
+      // u in [0,1): 0 = top of the helix, 1 = bottom. Wraps continuously.
+      const u = (((card.p + flow) % 1) + 1) % 1;
+      const ang = -u * TURNS * Math.PI * 2; // negative = counter-clockwise
+      const r = R_TOP + (R_BOTTOM - R_TOP) * u;
+      const bob = reduced ? 0 : Math.sin(t * 0.5 + card.phase) * 0.06;
+      card.mesh.position.set(
+        Math.sin(ang) * r,
+        H_TOP - u * H_RANGE + bob,
+        Math.cos(ang) * r,
+      );
+      card.mesh.rotation.set(card.tiltX, ang, card.tiltZ);
+      return u;
+    };
 
     const render = () => {
       const t = clock.getElapsedTime();
-
-      spin += (angleRef.current - spin) * 0.06;
-      group.rotation.y = spin;
-      group.rotation.x = reduced ? 0 : Math.sin(t * 0.1) * 0.03;
+      // Idle descent (turns/sec) plus the scroll hook's accumulated angle.
+      const idle = ((performance.now() - start) / 1000) * 0.045;
+      const flowTarget = idle - angleRef.current / (Math.PI * 2);
+      flowSmooth += (flowTarget - flowSmooth) * 0.08;
 
       raycaster.setFromCamera(pointer, camera);
       const hits = raycaster.intersectObjects(group.children, false);
@@ -248,19 +258,15 @@ export function Tornado() {
       }
 
       cards.forEach((card) => {
-        const appear = reduced
-          ? 1
-          : easeOutCubic(THREE.MathUtils.clamp((t - card.appearAt) / 0.8, 0, 1));
-        // Gentle vertical bob — soft, not mechanical.
-        card.mesh.position.y =
-          card.baseY + (reduced ? 0 : Math.sin(t * 0.5 + card.phase) * 0.12);
-
-        const mat = card.mesh.material as THREE.MeshBasicMaterial;
+        const u = placeCard(card, flowSmooth, t);
+        // Fade in at the top, out at the bottom, so the wrap is seamless.
+        const fade = smoothstep(0, 0.08, u) * (1 - smoothstep(0.9, 1, u));
         const isHovered = card.mesh === hovered;
-        const target = appear * (isHovered ? 1.16 : 1);
+        const target = fade * (isHovered ? 1.16 : 1);
         card.mesh.scale.setScalar(
-          THREE.MathUtils.lerp(card.mesh.scale.x, target, 0.1),
+          THREE.MathUtils.lerp(card.mesh.scale.x, target, 0.12),
         );
+        const mat = card.mesh.material as THREE.MeshBasicMaterial;
         mat.color.lerp(!hovered || isHovered ? white : dimC, 0.1);
       });
 
@@ -268,9 +274,10 @@ export function Tornado() {
     };
 
     if (reduced) {
-      cards.forEach((c) => c.mesh.scale.setScalar(1));
-      spin = angleRef.current;
-      group.rotation.y = spin;
+      cards.forEach((card) => {
+        placeCard(card, 0, 0);
+        card.mesh.scale.setScalar(1);
+      });
       render();
     } else {
       const loop = () => {
