@@ -12,8 +12,8 @@ import { useScrollRotation } from "@/hooks/useScrollRotation";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { TarjetaProyecto } from "./TarjetaProyecto";
 
-const CARD_W = 2.2;
-const CARD_H = 2.75; // 4:5
+const CARD_W = 2.8;
+const CARD_H = 1.75; // 16:10 landscape — uniform frames for a clean swirl
 
 /** Deterministic pseudo-random in [0,1) seeded by an integer. No per-frame RNG. */
 function seeded(n: number): number {
@@ -27,13 +27,16 @@ function seeded(n: number): number {
  * reference that sells the tornado depth.
  */
 function makeCardGeometry(): THREE.PlaneGeometry {
-  const geo = new THREE.PlaneGeometry(CARD_W, CARD_H, 24, 2);
+  const geo = new THREE.PlaneGeometry(CARD_W, CARD_H, 28, 2);
   const pos = geo.attributes.position;
   const halfW = CARD_W / 2;
-  const bend = 0.42;
+  const bend = 0.26;
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i);
-    pos.setZ(i, bend * (1 - (x / halfW) ** 2));
+    // Concave around the vertical axis: the side edges come toward the camera
+    // and the centre recedes, so every card wraps the same way — like panels on
+    // a cylinder. That consistent curl is what forms the swirl.
+    pos.setZ(i, -bend * (1 - (x / halfW) ** 2));
   }
   pos.needsUpdate = true;
   geo.computeVertexNormals();
@@ -80,9 +83,25 @@ function placeCards(
       (seeded(i + 23) - 0.5) * 1.8;
     const z = (seeded(i + 31) - 0.5) * 9.5; // deep → strong perspective + DOF
 
-    const texture = textureLoader.load(project.hero);
+    // Cover-crop each photo into the landscape frame (no stretching), so
+    // portrait and landscape sources all read as uniform horizontal cards.
+    const texture = textureLoader.load(project.hero, (tex) => {
+      const img = tex.image as { width: number; height: number } | undefined;
+      if (!img) return;
+      const imgAspect = img.width / img.height;
+      const planeAspect = CARD_W / CARD_H;
+      tex.center.set(0.5, 0.5);
+      if (imgAspect > planeAspect) {
+        tex.repeat.set(planeAspect / imgAspect, 1);
+      } else {
+        tex.repeat.set(1, imgAspect / planeAspect);
+      }
+      tex.needsUpdate = true;
+    });
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = 4;
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
     textures.push(texture);
 
     const geometry = makeCardGeometry();
@@ -105,7 +124,7 @@ function placeCards(
     mesh.rotation.y = (seeded(i + 47) - 0.5) * 0.5;
     mesh.rotation.z = (seeded(i + 53) - 0.5) * 0.22;
 
-    const baseScale = 0.85 + seeded(i + 61) * 0.5;
+    const baseScale = 1; // uniform card size — depth alone varies on-screen size
     mesh.scale.setScalar(baseScale);
     mesh.userData.slug = project.slug;
     group.add(mesh);
