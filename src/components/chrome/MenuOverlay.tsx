@@ -123,7 +123,7 @@ export function MenuOverlay({ open, onClose }: MenuOverlayProps) {
             className={cn(
               "absolute inset-0 flex flex-col bg-paper text-petroleum shadow-2xl outline-none",
               "px-8 py-10",
-              "md:inset-y-4 md:right-4 md:left-auto md:w-[min(420px,34vw)] md:rounded-3xl md:px-11 md:py-11",
+              "md:inset-y-5 md:right-5 md:left-auto md:w-[min(460px,33vw)] md:rounded-3xl md:px-12 md:py-12",
             )}
           >
             <div className="flex justify-end">
@@ -138,7 +138,7 @@ export function MenuOverlay({ open, onClose }: MenuOverlayProps) {
               </button>
             </div>
 
-            <nav className="mt-auto flex flex-col gap-3">
+            <nav className="flex flex-1 flex-col justify-center gap-3">
               {destinations.map((destination) =>
                 destination.external ? (
                   <a
@@ -163,7 +163,7 @@ export function MenuOverlay({ open, onClose }: MenuOverlayProps) {
               )}
             </nav>
 
-            <footer className="mt-auto flex flex-col gap-6 pt-12">
+            <footer className="flex flex-col gap-6 pt-12">
               <a
                 href={`mailto:${SITE.email}`}
                 className="text-sm tracking-wide underline-offset-4 transition-opacity duration-200 hover:opacity-60 hover:underline"

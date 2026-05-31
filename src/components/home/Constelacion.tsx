@@ -79,10 +79,11 @@ function placeCards(
 
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
-    // Fixed individual tilt in 3D — this is what makes them read as a galaxy.
-    mesh.rotation.x = (seeded(i + 41) - 0.5) * 0.7;
-    mesh.rotation.y = (seeded(i + 47) - 0.5) * 1.0;
-    mesh.rotation.z = (seeded(i + 53) - 0.5) * 0.45;
+    // Gentle individual tilt — the reference cards are mostly front-facing with
+    // a soft skew, not aggressively rotated.
+    mesh.rotation.x = (seeded(i + 41) - 0.5) * 0.32;
+    mesh.rotation.y = (seeded(i + 47) - 0.5) * 0.5;
+    mesh.rotation.z = (seeded(i + 53) - 0.5) * 0.22;
 
     const baseScale = 0.85 + seeded(i + 61) * 0.5;
     mesh.scale.setScalar(baseScale);
@@ -135,14 +136,14 @@ export function Constelacion() {
     let frame = 0;
 
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     } catch {
       return; // No WebGL — DOM fallback still renders.
     }
 
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
-    renderer.setClearColor(0x000000, 1);
+    renderer.setClearColor(0x000000, 0); // transparent → the CSS grid shows through
     container.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
@@ -178,7 +179,7 @@ export function Constelacion() {
     const pointer = new THREE.Vector2(2, 2); // off-screen until first move
     let hovered: THREE.Mesh | null = null;
     const white = new THREE.Color(0xffffff);
-    const dim = new THREE.Color(0x4a4a4a);
+    const dim = new THREE.Color(0x8f8f8f); // gentle dim, not blackout
 
     const onPointerMove = (event: PointerEvent) => {
       const rect = renderer!.domElement.getBoundingClientRect();
@@ -277,6 +278,16 @@ export function Constelacion() {
     <>
       {/* WebGL galaxy — desktop only. */}
       <div className="relative hidden h-screen w-full overflow-hidden bg-milo-black md:block">
+        {/* Faint petroleum grid behind the (transparent) canvas, like the reference. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage:
+              "linear-gradient(var(--milo-petroleum) 1px, transparent 1px), linear-gradient(90deg, var(--milo-petroleum) 1px, transparent 1px)",
+            backgroundSize: "64px 64px",
+          }}
+        />
         <div ref={containerRef} className="absolute inset-0" />
       </div>
 
