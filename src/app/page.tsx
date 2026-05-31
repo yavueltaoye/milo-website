@@ -6,7 +6,7 @@ import { MenuOverlay } from "@/components/chrome/MenuOverlay";
 import { ToggleSonido } from "@/components/chrome/ToggleSonido";
 import { ToggleVista, type Vista } from "@/components/chrome/ToggleVista";
 import { PortalBienvenida } from "@/components/portal/PortalBienvenida";
-import { Constelacion } from "@/components/home/Constelacion";
+import { Tornado } from "@/components/home/Tornado";
 import { ListaTitulos } from "@/components/home/ListaTitulos";
 import { DiscoDiario } from "@/components/home/DiscoDiario";
 
@@ -18,9 +18,9 @@ export default function Home() {
     <main className="relative min-h-[100dvh] bg-milo-black text-ivory">
       <PortalBienvenida />
 
-      {/* spiral = the galaxy; list = just the names (no constellation), both on
-          the same dark surface — like the reference. */}
-      {view === "spiral" ? <Constelacion /> : <ListaTitulos />}
+      {/* spiral = the tornado; list = just the names, both on the same dark
+          surface — like the reference. */}
+      {view === "spiral" ? <Tornado /> : <ListaTitulos />}
 
       {/* Fixed chrome (always ivory — the surface is always dark). */}
       <Orbe />
