@@ -161,13 +161,15 @@ export function Constelacion() {
       materials,
     );
 
-    // Depth-of-field: sharp at the cloud centre, blurry toward near/far.
+    // Depth-of-field: focus on the FRONT of the cloud so cards rotating toward
+    // the camera become crisp while those in the back stay soft (like the
+    // reference). Camera is at z=13; the nearest cards sit ~8 units away.
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
     const bokeh = new BokehPass(scene, camera, {
-      focus: 13.0,
-      aperture: 0.00028,
-      maxblur: 0.012,
+      focus: 8.4,
+      aperture: 0.00011,
+      maxblur: 0.009,
     });
     composer.addPass(bokeh);
     composer.setSize(width, height);

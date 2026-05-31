@@ -121,9 +121,9 @@ export function MenuOverlay({ open, onClose }: MenuOverlayProps) {
             exit={panelInitial}
             transition={panelTransition}
             className={cn(
-              "absolute right-0 top-0 flex h-full w-full flex-col",
-              "rounded-l-3xl bg-paper text-petroleum shadow-2xl outline-none",
-              "px-8 py-10 md:w-[58%] md:px-14 md:py-16",
+              "absolute inset-0 flex flex-col bg-paper text-petroleum shadow-2xl outline-none",
+              "px-8 py-10",
+              "md:inset-y-4 md:right-4 md:left-auto md:w-[min(420px,34vw)] md:rounded-3xl md:px-11 md:py-11",
             )}
           >
             <div className="flex justify-end">
@@ -146,7 +146,7 @@ export function MenuOverlay({ open, onClose }: MenuOverlayProps) {
                     href={destination.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-4xl font-light tracking-tight transition-opacity duration-200 hover:opacity-60 md:text-6xl"
+                    className="text-3xl font-light tracking-tight transition-opacity duration-200 hover:opacity-60 md:text-[2.5rem]"
                   >
                     {destination.label}
                   </a>
@@ -155,7 +155,7 @@ export function MenuOverlay({ open, onClose }: MenuOverlayProps) {
                     key={destination.label}
                     href={destination.href}
                     onClick={onClose}
-                    className="text-4xl font-light tracking-tight transition-opacity duration-200 hover:opacity-60 md:text-6xl"
+                    className="text-3xl font-light tracking-tight transition-opacity duration-200 hover:opacity-60 md:text-[2.5rem]"
                   >
                     {destination.label}
                   </Link>
