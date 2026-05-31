@@ -18,9 +18,9 @@ export default function Home() {
     <main className="relative min-h-[100dvh] bg-milo-black text-ivory">
       <PortalBienvenida />
 
-      {/* The galaxy stays mounted in both views — the background never changes. */}
-      <Constelacion />
-      {view === "list" && <ListaTitulos />}
+      {/* spiral = the galaxy; list = just the names (no constellation), both on
+          the same dark surface — like the reference. */}
+      {view === "spiral" ? <Constelacion /> : <ListaTitulos />}
 
       {/* Fixed chrome (always ivory — the surface is always dark). */}
       <Orbe />
