@@ -221,18 +221,101 @@ a { color: var(--milo-petroleum); text-decoration: none; }
 
 .site { min-height:100vh; display:flex; flex-direction:column; }
 
-/* NAV */
-.nav { position:sticky; top:0; z-index:50; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:20px var(--gutter); background:rgba(255,255,255,0.86); backdrop-filter:blur(12px) saturate(110%); -webkit-backdrop-filter:blur(12px) saturate(110%); border-bottom:1px solid var(--milo-hairline); }
+/* NAV — barra clara para el home editorial (petróleo sobre blanco, hairline).
+   El logo del nav es la variante petróleo (logo-primary); durante el portal el
+   telón (z-80) cubre esta barra (z-50) hasta alzarse, así que el cross-fade del
+   isotipo volador marfil→logo petróleo sigue leyéndose limpio al revelar. */
+.nav { position:sticky; top:0; z-index:50; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:16px var(--gutter); background:color-mix(in oklab, var(--milo-white) 80%, transparent); backdrop-filter:blur(12px) saturate(1.08); -webkit-backdrop-filter:blur(12px) saturate(1.08); border-bottom:1px solid var(--milo-hairline); }
 .nav__logo { background:transparent; border:0; padding:0; cursor:pointer; display:flex; align-items:center; }
-.nav__logo img { height:22px; display:block; }
-.nav__links { display:flex; gap:36px; justify-content:center; }
-.nav__link { background:transparent; border:0; padding:4px 0; cursor:pointer; font-weight:400; font-size:14px; letter-spacing:.04em; color:var(--milo-petroleum); border-bottom:1px solid transparent; transition:opacity 160ms; }
+.nav__logo img { height:34px; width:auto; display:block; opacity:1; }
+/* ── Cross-fade del nav logo con el isotipo volador ──────────────────────────
+   Fase 1 [data-milo-transitioning]: nav logo oculto (opacity:0, sin transición)
+   mientras el iso viaja — evita la superposición tipo "NMilo".
+   Fase 2 [data-milo-blending]: nav logo funde opacity 0→1 simultáneamente
+   con el fade-out del iso (0.42s linear) — cross-fade limpio.
+   La especificidad doble de [trans][blend] sobreescribe a [trans] solo. */
+html[data-milo-transitioning] .nav__logo img { opacity:0; transition:none; }
+html[data-milo-transitioning][data-milo-blending] .nav__logo img { opacity:1; transition:opacity 0.42s linear; }
+.nav__links { display:flex; gap:24px; justify-content:center; }
+.nav__link { background:transparent; border:0; padding:10px 0; min-height:44px; display:inline-flex; align-items:center; cursor:pointer; font-weight:400; font-size:13px; letter-spacing:.04em; white-space:nowrap; color:var(--milo-petroleum); border-bottom:1px solid transparent; transition:opacity 160ms,border-color 160ms; }
 .nav__link:hover { opacity:.6; }
 .nav__link.is-active { font-weight:500; border-bottom-color:var(--milo-petroleum); }
+/* Quitar will-change cuando no hay animación (reduced-motion) */
 .nav__lang { justify-self:end; display:flex; gap:8px; align-items:center; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--milo-petroleum); }
 .nav__lang span { opacity:.55; cursor:pointer; }
 .nav__lang .is-active { opacity:1; font-weight:500; }
 .nav__lang .sep { opacity:.3; }
+.nav__links button.nav__link { cursor:pointer; }
+.nav__end { justify-self:end; display:flex; align-items:center; gap:22px; }
+.nav__sections { display:none; }
+.nav__menu { display:flex; align-items:center; justify-content:center; background:transparent; border:0; padding:10px; margin:-10px; cursor:pointer; color:var(--milo-petroleum); transition:opacity 160ms; }
+.nav__menu:hover { opacity:.55; }
+.nav__burger { display:flex; flex-direction:column; gap:5px; width:22px; }
+.nav__burger span { display:block; height:1.5px; background:currentColor; border-radius:2px; }
+/* Móvil: el centro (logo) y la derecha (menú) ocupan la primera fila; los
+   filtros por tipo bajan a una segunda fila como tira horizontal scrollable,
+   conservando la interacción principal del home en pantallas estrechas. */
+@media (max-width:900px){
+  .nav { grid-template-columns:1fr auto; grid-template-rows:auto auto; row-gap:12px; }
+  .nav__logo { grid-column:1; grid-row:1; }
+  .nav__end { grid-column:2; grid-row:1; }
+  .nav__links { grid-column:1 / -1; grid-row:2; justify-content:flex-start; gap:20px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; margin:0 calc(-1 * var(--gutter)); padding:0 var(--gutter); }
+  .nav__links::-webkit-scrollbar { display:none; }
+}
+
+/* ============================================================
+   HOME — índice estilo BIG (estructura 1:1, estilo MILO)
+   Mecánica de BIG: la imagen va centrada en el viewport y la meta
+   (glifo · título · ubicación) se cuelga a su izquierda, alineada a la
+   derecha y pegada a la foto. Tipografía Human Sans + paleta petróleo/marfil.
+   ============================================================ */
+.home-list { padding:0 0 112px; }
+.home-list__items { list-style:none; margin:0; padding:0; }
+
+/* Cada fila entra con un fade-up suave al aparecer en el viewport.
+   IMPORTANTE: el estado base es visible para que SEO/renderers/headless vean
+   el contenido. La clase .will-animate la añade JS sólo cuando IntersectionObserver
+   está disponible y la fila empieza fuera de pantalla. */
+.home-row-item { opacity:1; transform:none; }
+.home-row-item.will-animate { opacity:0; transform:translateY(28px); transition:opacity .7s var(--ease-out), transform .7s var(--ease-out); }
+.home-row-item.will-animate.is-active { opacity:1; transform:none; }
+
+.home-row { position:relative; display:flex; justify-content:center; padding:48px 0; text-decoration:none; color:var(--milo-petroleum); }
+/* The stage is the image-width positioning context the meta hangs off of. */
+.home-row__stage { position:relative; width:clamp(340px,34vw,520px); }
+.home-row__media { position:relative; width:100%; aspect-ratio:3/2; overflow:hidden; background:var(--milo-paper); }
+.home-row__media img { display:block; will-change:transform; transition:transform var(--dur-slow) var(--ease-out); }
+/* Zoom atado al hover de la imagen: entra al pasar, sale al salir de la foto. */
+.home-row__media:hover img { transform:scale(1.04); }
+
+/* Meta: absoluta a la izquierda de la imagen, alineada a la derecha. */
+.home-row__meta { position:absolute; top:0; left:-28px; transform:translateX(-100%); display:flex; flex-direction:column; align-items:flex-end; text-align:right; max-width:280px; }
+.home-row__text { margin-top:24px; }
+.home-row__title { font-weight:400; font-size:var(--fs-20); line-height:1.18; letter-spacing:var(--ls-h); text-wrap:balance; color:var(--milo-petroleum); margin:0; }
+.home-row__loc { margin-top:9px; font-size:var(--fs-13); line-height:1.4; letter-spacing:.06em; text-transform:uppercase; color:var(--fg-muted); }
+
+/* Glifo: cuadrado petróleo sólido con el pictograma en marfil. */
+.home-glyph { display:flex; align-items:center; justify-content:center; width:50px; height:50px; background:var(--milo-petroleum); color:var(--milo-ivory); flex:none; transition:transform var(--dur-base) var(--ease-out); }
+.home-glyph svg { width:62%; height:62%; }
+
+/* Hover sobrio: al pasar sobre la foto, el glifo de esa fila se eleva apenas. */
+.home-row__stage:has(.home-row__media:hover) .home-glyph { transform:translateY(-3px); }
+
+@media (max-width:1024px){
+  /* Apilado: meta sobre la imagen, alineada a la izquierda (como BIG en móvil). */
+  .home-row { padding:32px var(--gutter); }
+  .home-row__stage { width:100%; max-width:680px; }
+  .home-row__media { aspect-ratio:4/3; }
+  .home-row__meta { position:static; transform:none; left:auto; max-width:none; flex-direction:row; align-items:center; gap:14px; text-align:left; margin-bottom:16px; }
+  .home-row__text { margin-top:0; }
+  .home-glyph { width:40px; height:40px; }
+}
+@media (prefers-reduced-motion:reduce){
+  .home-row-item { transition:none; }
+  .home-glyph { transition:none; }
+  .home-row__media img { will-change:auto; transition:none !important; }
+  .home-row__media:hover img { transform:none !important; }
+}
 
 /* FOOTER */
 .footer { margin-top:128px; padding:64px var(--gutter) 28px; background:var(--milo-white); }

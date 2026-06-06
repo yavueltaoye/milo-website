@@ -26,6 +26,7 @@ const Ctx = createContext<AudioState | null>(null);
 export function AudioProvider({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLAudioElement | null>(null);
   const [enabled, setEnabled] = useState(false);
+  // Always starts as false — portal shows on every page load.
   const [entered, setEntered] = useState(false);
 
   useEffect(() => {

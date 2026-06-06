@@ -33,7 +33,8 @@ export function DiscoDiario({ tone = "ivory" }: DiscoDiarioProps) {
       <style>{
         "@keyframes milo-disc-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}"
       }</style>
-      <div className="relative h-24 w-24">
+      {/* md:h-24 md:w-24 en desktop; más pequeño en móvil para no tapar proyectos */}
+      <div className="relative h-16 w-16 md:h-24 md:w-24">
         <div
           className="absolute inset-0"
           style={
@@ -45,9 +46,9 @@ export function DiscoDiario({ tone = "ivory" }: DiscoDiarioProps) {
           {letters.map((char, index) => (
             <span
               key={index}
-              className={`absolute left-1/2 top-1/2 text-[9px] uppercase tracking-[0.05em] ${textTone}`}
+              className={`absolute left-1/2 top-1/2 text-[7px] md:text-[9px] uppercase tracking-[0.05em] ${textTone}`}
               style={{
-                transform: `translate(-50%, -50%) rotate(${index * step}deg) translateY(-44px)`,
+                transform: `translate(-50%, -50%) rotate(${index * step}deg) translateY(-30px)`,
                 transformOrigin: "center",
               }}
             >
@@ -56,12 +57,12 @@ export function DiscoDiario({ tone = "ivory" }: DiscoDiarioProps) {
           ))}
         </div>
 
-        <div className={`absolute left-1/2 top-1/2 h-12 w-12 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border ${borderTone}`}>
+        <div className={`absolute left-1/2 top-1/2 h-8 w-8 md:h-12 md:w-12 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border ${borderTone}`}>
           <Image
             src="/images/projects/tomo/hero.jpg"
             alt=""
             fill
-            sizes="48px"
+            sizes="(max-width: 768px) 32px, 48px"
             className="object-cover"
           />
         </div>

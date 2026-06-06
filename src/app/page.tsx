@@ -1,42 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import { Orbe } from "@/components/chrome/Orbe";
-import { MenuOverlay } from "@/components/chrome/MenuOverlay";
-import { ToggleSonido } from "@/components/chrome/ToggleSonido";
-import { ToggleVista, type Vista } from "@/components/chrome/ToggleVista";
 import { PortalBienvenida } from "@/components/portal/PortalBienvenida";
-import { Tornado } from "@/components/home/Tornado";
-import { ListaTitulos } from "@/components/home/ListaTitulos";
+import { NavHome } from "@/components/home/NavHome";
+import { ListaProyectosBIG } from "@/components/home/ListaProyectosBIG";
+import { ToggleSonido } from "@/components/chrome/ToggleSonido";
 import { DiscoDiario } from "@/components/home/DiscoDiario";
 
+/**
+ * Home — a sober, BIG-inspired editorial index on a light surface: a fixed top
+ * nav (logo · type filters · sections) over a calm scroll of project rows. The
+ * filter chosen in the nav narrows the list. Replaces the previous WebGL tornado.
+ */
 export default function Home() {
-  const [view, setView] = useState<Vista>("spiral");
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [filter, setFilter] = useState<string>("Todos");
 
   return (
-    <main className="relative min-h-[100dvh] bg-milo-black text-ivory">
+    <main className="min-h-[100dvh] bg-milo-white text-petroleum">
       <PortalBienvenida />
 
-      {/* spiral = the tornado; list = just the names, both on the same dark
-          surface — like the reference. */}
-      {view === "spiral" ? <Tornado /> : <ListaTitulos />}
+      <h1 className="sr-only">
+        MILO — Estudio de arquitectura e interiorismo en Perú. Proyectos.
+      </h1>
 
-      {/* Fixed chrome (always ivory — the surface is always dark). */}
-      <Orbe />
-      <ToggleVista value={view} onChange={setView} />
+      <NavHome filter={filter} onFilter={setFilter} />
+      <ListaProyectosBIG filter={filter} />
 
-      <button
-        type="button"
-        onClick={() => setMenuOpen(true)}
-        className="fixed right-(--gutter) top-5 z-50 flex items-center gap-2 text-sm tracking-wide text-ivory transition-opacity duration-200 hover:opacity-70"
-      >
-        menu <span className="opacity-50">•</span>
-      </button>
-
-      <MenuOverlay open={menuOpen} onClose={() => setMenuOpen(false)} />
-      <ToggleSonido />
-      <DiscoDiario />
+      <DiscoDiario tone="petroleum" />
+      <ToggleSonido className="border-petroleum/30 bg-paper/70 text-petroleum" />
     </main>
   );
 }
