@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AudioProvider } from "@/lib/audio";
 import { SmoothScroll } from "@/components/SmoothScroll";
@@ -32,6 +32,15 @@ export const metadata: Metadata = {
     description: DESCRIPTION,
     images: [DEFAULT_OG_IMAGE],
   },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-icon.png",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#003a4c",
+  colorScheme: "light",
 };
 
 export default function RootLayout({
