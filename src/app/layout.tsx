@@ -42,8 +42,15 @@ export default function RootLayout({
   return (
     <html lang="es" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
+        <a href="#contenido" className="skip-link">
+          Saltar al contenido
+        </a>
         <AudioProvider>
-          <SmoothScroll>{children}</SmoothScroll>
+          <SmoothScroll>
+            <div id="contenido" tabIndex={-1} className="outline-none">
+              {children}
+            </div>
+          </SmoothScroll>
         </AudioProvider>
       </body>
     </html>
