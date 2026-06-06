@@ -8,12 +8,13 @@ export const SITE = {
   audioSrc: "/audio/ambiente_natural.mp3",
   portalCopy: "Diseñamos espacios que se habitan con los sentidos",
   portalCta: "Bienvenido al mundo de MILO",
-  /** Cifras de "Sobre Nosotros" — propuesta editable. */
+  /** Cifras de "Sobre Nosotros" — propuesta editable. Valores numéricos para
+      que rendericen limpios a escala display; la unidad/contexto va en la etiqueta. */
   stats: [
     { n: "10", l: "Años de oficio" },
     { n: "12", l: "Proyectos construidos" },
-    { n: "≈2,800 m²", l: "Intervenidos" },
+    { n: "2,800", l: "m² intervenidos" },
     { n: "5", l: "Ciudades y distritos" },
-    { n: "CasaCor 2026", l: "1 selección" },
+    { n: "2026", l: "Selección CasaCor" },
   ],
 } as const;

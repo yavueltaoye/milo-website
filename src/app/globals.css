@@ -369,7 +369,9 @@ html[data-milo-transitioning][data-milo-blending] .nav__logo img { opacity:1; tr
 .status--proyecto { background:transparent; box-shadow:inset 0 0 0 1px var(--milo-petroleum); color:var(--milo-petroleum); }
 
 /* DETAIL */
-.detail { padding:56px var(--gutter) 0; max-width:var(--container-wide); margin:0 auto; }
+/* top padding clears the fixed Orbe mark (top:20px + 44px) so the breadcrumb
+   never sits under the logo on the left edge. */
+.detail { padding:92px var(--gutter) 0; max-width:var(--container-wide); margin:0 auto; }
 .detail__crumb { display:flex; gap:10px; align-items:center; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--milo-petroleum); }
 .detail__crumb a, .detail__crumb button { background:transparent; border:0; cursor:pointer; color:inherit; font:inherit; padding:0; letter-spacing:inherit; text-transform:inherit; border-bottom:1px solid currentColor; }
 .detail__crumb .sep { opacity:.4; }
@@ -411,9 +413,14 @@ html[data-milo-transitioning][data-milo-blending] .nav__logo img { opacity:1; tr
 .tmember h3 { font-size:18px; font-weight:500; letter-spacing:-.01em; margin:12px 0 0; }
 .tmember .role { font-size:12px; letter-spacing:.14em; text-transform:uppercase; opacity:.7; }
 .tmember .bio { font-size:13px; font-weight:300; opacity:.75; margin-top:2px; }
-.studio__numbers { display:grid; grid-template-columns:repeat(4,1fr); gap:32px; padding:64px 0 0; border-top:1px solid var(--milo-petroleum); }
-.studio__numbers div { display:flex; flex-direction:column; gap:8px; }
-.studio__numbers .n { font-weight:200; font-size:clamp(56px,6vw,96px); line-height:1; letter-spacing:-.03em; color:var(--milo-petroleum); }
+.studio__numbers { display:grid; grid-template-columns:repeat(5,1fr); gap:32px; padding:64px 0 0; border-top:1px solid var(--milo-petroleum); }
+/* min-width:0 lets the equal 1fr tracks shrink so long labels wrap instead of
+   forcing the grid (and the page) wider than the viewport. */
+.studio__numbers div { display:flex; flex-direction:column; gap:8px; min-width:0; }
+.studio__numbers .l { overflow-wrap:break-word; }
+.studio__cols > div { min-width:0; }
+/* Stat-strip scale (not hero scale): five figures sit in a calm row. */
+.studio__numbers .n { font-weight:200; font-size:clamp(40px,4.6vw,68px); line-height:1; letter-spacing:-.03em; color:var(--milo-petroleum); font-variant-numeric:tabular-nums; }
 .studio__numbers .l { font-size:12px; letter-spacing:.14em; text-transform:uppercase; opacity:.7; }
 
 /* JOURNAL / DIARIO */
@@ -442,3 +449,80 @@ html[data-milo-transitioning][data-milo-blending] .nav__logo img { opacity:1; tr
 .featured__img-wrap { overflow:hidden; }
 .featured__img-wrap img { display:block; width:100%; height:auto; transition:transform var(--dur-slow) var(--ease-out); }
 .featured__img-wrap:hover img { transform:scale(1.02); }
+
+/* ============================================================
+   RESPONSIVE — interior pages (projects index, detail, studio,
+   journal, footer). The home + nav handle their own breakpoints
+   above; this layer reflows the desktop multi-column layouts down
+   to tablet and mobile so nothing overflows on narrow viewports.
+   ============================================================ */
+
+/* ── Tablet (≤1024px) ───────────────────────────────────────── */
+@media (max-width:1024px){
+  /* Project / journal entry detail */
+  .detail__intro { grid-template-columns:1fr; gap:40px; padding:56px 0; }
+  .detail__gallery { grid-template-columns:1fr; gap:16px; padding:32px 0; }
+  .g--tall, .g--wide, .g--sq { grid-column:auto; }
+  .detail__quote { padding:64px 0; }
+
+  /* Sobre nosotros */
+  .studio__cols { grid-template-columns:1fr 1fr; gap:40px; padding:64px 0; margin-top:64px; }
+  .studio__teamgrid { grid-template-columns:1fr 1fr; gap:32px 28px; }
+  .studio__numbers { grid-template-columns:1fr 1fr; gap:40px 28px; }
+
+  /* Footer: hero column spans, rest in two columns */
+  .footer__grid { grid-template-columns:1fr 1fr; gap:40px 32px; }
+  .footer__grid > :first-child { grid-column:1 / -1; }
+}
+
+/* ── Mobile (≤640px) ────────────────────────────────────────── */
+@media (max-width:640px){
+  /* Tighten the big top paddings so content isn't pushed far down. */
+  .projects, .studio, .journal { padding-top:84px; }
+
+  /* Projects index: the wide table becomes a stacked, tappable list.
+     Each row → code (small) / title (large) / "tipo · lugar · año · área"
+     meta line / status chip. The whole <tr> stays clickable. */
+  .projects__table thead { display:none; }
+  .projects__table, .projects__table tbody { display:block; }
+  .projects__table tbody tr { display:block; padding:18px 0; border-bottom:1px solid var(--milo-hairline); }
+  .projects__table tbody tr:hover { background:transparent; }
+  .projects__table td { display:inline; padding:0; border:0; }
+  .projects__table td.code { display:block; font-size:11px; letter-spacing:.12em; opacity:.5; margin-bottom:3px; }
+  .projects__table td.title { display:block; font-size:20px; line-height:1.2; margin-bottom:7px; }
+  .projects__table td:nth-child(3),
+  .projects__table td:nth-child(4),
+  .projects__table td:nth-child(5),
+  .projects__table td:nth-child(6) { display:inline-block; font-size:13px; font-weight:300; line-height:1.4; opacity:.72; text-align:left; }
+  .projects__table td:nth-child(3)::after,
+  .projects__table td:nth-child(4)::after,
+  .projects__table td:nth-child(5)::after { content:"·"; opacity:.4; margin:0 7px; }
+  .projects__table td:nth-child(7) { display:block; margin-top:11px; }
+  .projects__table td.arrow { display:none; }
+
+  /* Sobre nosotros */
+  .studio__cols { grid-template-columns:1fr; gap:32px; padding:48px 0; margin-top:48px; }
+  .studio__teamhead { margin-bottom:32px; }
+  .studio__teamgrid { grid-template-columns:1fr; gap:40px; }
+  .studio__numbers { grid-template-columns:1fr 1fr; gap:32px 24px; padding-top:48px; }
+
+  /* Diario list: each entry stacks date / title / tag. */
+  .journal__head { margin-bottom:48px; }
+  .journal .entry { display:flex; flex-direction:column; align-items:flex-start; gap:6px; padding:20px 0; }
+  .journal .entry__date { order:1; }
+  .journal .entry__code { display:none; }
+  .journal .entry__title { order:2; font-size:20px; }
+  .journal .entry__tag { order:3; text-align:left; }
+  .journal .entry__arrow { display:none; }
+
+  /* Project detail: next/prev stacks; quote breathes less. */
+  .detail__nextprev { grid-template-columns:1fr; gap:10px; padding:40px 0; }
+  .detail__nextprev h3 { font-size:26px; }
+  .detail__quote { padding:48px 0; }
+  .detail__intro { padding:40px 0; }
+
+  /* Footer: single column. */
+  .footer__grid { grid-template-columns:1fr; gap:32px; }
+  .footer { padding-top:48px; margin-top:80px; }
+  .footer__base { flex-direction:column; gap:10px; }
+}

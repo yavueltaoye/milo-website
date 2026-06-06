@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Orbe } from "@/components/chrome/Orbe";
+import { InteriorNav } from "@/components/chrome/InteriorNav";
 import { IndiceProyectos } from "@/components/home/IndiceProyectos";
 import { Footer } from "@/components/Footer";
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function ProyectosPage() {
   return (
     <main className="min-h-screen bg-paper text-petroleum">
-      <Orbe variant="petroleum" />
+      <InteriorNav />
       <header className="projects pb-2">
         <h1 className="projects__title">Proyectos</h1>
       </header>
