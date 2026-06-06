@@ -4,9 +4,10 @@ import { IndiceProyectos } from "@/components/home/IndiceProyectos";
 import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "Proyectos — MILO Estudio",
+  title: "Proyectos",
   description:
     "El índice completo de proyectos de MILO Estudio: vivienda, interiorismo, gastronomía, oficinas e instalaciones.",
+  alternates: { canonical: "/proyectos" },
 };
 
 export default function ProyectosPage() {

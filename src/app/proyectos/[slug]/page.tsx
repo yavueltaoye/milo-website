@@ -22,11 +22,21 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const project = PROJECTS.find((p) => p.slug === slug);
-  if (!project) return { title: "Proyecto — MILO Estudio" };
+  if (!project) return { title: "Proyecto" };
 
+  const description = project.body[0];
   return {
-    title: `${project.title} — MILO Estudio`,
-    description: project.body[0],
+    title: project.title,
+    description,
+    alternates: { canonical: `/proyectos/${project.slug}` },
+    openGraph: {
+      type: "article",
+      title: project.title,
+      description,
+      url: `/proyectos/${project.slug}`,
+      images: [{ url: project.hero, width: 1600, height: 900, alt: project.title }],
+    },
+    twitter: { card: "summary_large_image", images: [project.hero] },
   };
 }
 

@@ -4,9 +4,10 @@ import { Listado } from "@/components/diario/Listado";
 import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "Diario — MILO",
+  title: "Diario",
   description:
     "El diario de MILO Estudio: notas de prensa, futuros proyectos, planes y alianzas del estudio.",
+  alternates: { canonical: "/diario" },
 };
 
 export default function DiarioPage() {

@@ -190,6 +190,14 @@
 @layer base {
   * { @apply border-border outline-ring/50; }
   html { @apply font-sans; }
+
+  /* Branded, consistent keyboard focus indicator (WCAG 2.2 Focus Appearance).
+     Petroleum reads on every light surface on the site; the portal button keeps
+     its own ivory ring over the black curtain. Only shows for keyboard users. */
+  :focus-visible { outline:2px solid var(--milo-petroleum); outline-offset:3px; border-radius:1px; }
+  @media (prefers-reduced-motion:no-preference){
+    :focus-visible { transition:outline-offset 120ms var(--ease-out); }
+  }
 }
 
 /* ============================================================

@@ -6,9 +6,10 @@ import { Fundadores } from "@/components/sobre/Fundadores";
 import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "Sobre Nosotros — MILO",
+  title: "Sobre Nosotros",
   description:
     "MILO Estudio Arquitectónico: dos arquitectos y una obsesión por los espacios que se habitan con los sentidos.",
+  alternates: { canonical: "/sobre-nosotros" },
 };
 
 export default function SobreNosotrosPage() {

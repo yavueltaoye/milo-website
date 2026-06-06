@@ -19,11 +19,18 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const entry = JOURNAL.find((e) => e.slug === slug);
-  if (!entry) return { title: "Diario — MILO" };
+  if (!entry) return { title: "Diario" };
 
   return {
-    title: `${entry.title} — MILO`,
+    title: entry.title,
     description: entry.excerpt,
+    alternates: { canonical: `/diario/${entry.slug}` },
+    openGraph: {
+      type: "article",
+      title: entry.title,
+      description: entry.excerpt,
+      url: `/diario/${entry.slug}`,
+    },
   };
 }
 
