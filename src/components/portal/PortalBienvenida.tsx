@@ -168,7 +168,7 @@ export function PortalBienvenida() {
                 <Image
                   src="/assets/lockup-v-ivory.png"
                   alt={SITE.name}
-                  width={160}
+                  width={376}
                   height={200}
                   priority
                   className="h-auto w-32 select-none sm:w-40"
