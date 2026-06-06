@@ -49,3 +49,6 @@ next-env.d.ts
 temp/
 
 shots/
+
+# Local image originals backup (pre-optimization)
+.image-originals/
