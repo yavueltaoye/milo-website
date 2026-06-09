@@ -5,13 +5,16 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { MenuOverlay } from "./MenuOverlay";
 
 describe("MenuOverlay", () => {
-  it("renders the three destinations when open", () => {
+  it("renders the destinations when open", () => {
     render(<MenuOverlay open onClose={() => {}} />);
-    expect(screen.getByRole("link", { name: /proyectos/i })).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /sobre nosotros/i }),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /contacto/i })).toBeInTheDocument();
+    // "Proyectos" se removió del menú: el home ya es el índice de proyectos.
+    expect(
+      screen.queryByRole("link", { name: /^proyectos$/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("points 'Contacto' to the WhatsApp url, opening in a new tab safely", () => {

@@ -235,20 +235,21 @@ a { color: var(--milo-petroleum); text-decoration: none; }
 .site { min-height:100vh; display:flex; flex-direction:column; }
 
 /* NAV — barra clara para el home editorial (petróleo sobre blanco, hairline).
-   El logo del nav es la variante petróleo (logo-primary); durante el portal el
-   telón (z-80) cubre esta barra (z-50) hasta alzarse, así que el cross-fade del
-   isotipo volador marfil→logo petróleo sigue leyéndose limpio al revelar. */
-.nav { position:sticky; top:0; z-index:50; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:16px var(--gutter); background:color-mix(in oklab, var(--milo-white) 80%, transparent); backdrop-filter:blur(12px) saturate(1.08); -webkit-backdrop-filter:blur(12px) saturate(1.08); border-bottom:1px solid var(--milo-hairline); }
+   El logo del nav es la variante petróleo (logo-primary). Durante el portal el
+   telón (z-80) cubre esta barra (z-50) hasta alzarse: el wordmark permanece a
+   opacity:1 — invisible tras el telón — y queda revelado ya formado cuando el
+   telón se alza. El isotipo volador marfil aterriza exactamente sobre su M y se
+   disuelve para descubrir la M petróleo real (ver PortalBienvenida.tsx). */
+/* ── Nav: transparente en el top, frosted glass al hacer scroll ── */
+/* Sin border-bottom en ningún estado — el blur crea la separación visual, como iOS. */
+.nav { position:sticky; top:0; z-index:50; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:16px var(--gutter); background:rgba(250,250,247,0); backdrop-filter:blur(0px) saturate(1); -webkit-backdrop-filter:blur(0px) saturate(1); transition:background 500ms ease,backdrop-filter 500ms ease,-webkit-backdrop-filter 500ms ease; }
+/* Estado scrolled: frosted glass puro, sin ninguna línea */
+.nav.is-scrolled { background:rgba(250,250,247,0.82); backdrop-filter:blur(22px) saturate(1.15); -webkit-backdrop-filter:blur(22px) saturate(1.15); }
 .nav__logo { background:transparent; border:0; padding:0; cursor:pointer; display:flex; align-items:center; }
 .nav__logo img { height:34px; width:auto; display:block; opacity:1; }
-/* ── Cross-fade del nav logo con el isotipo volador ──────────────────────────
-   Fase 1 [data-milo-transitioning]: nav logo oculto (opacity:0, sin transición)
-   mientras el iso viaja — evita la superposición tipo "NMilo".
-   Fase 2 [data-milo-blending]: nav logo funde opacity 0→1 simultáneamente
-   con el fade-out del iso (0.42s linear) — cross-fade limpio.
-   La especificidad doble de [trans][blend] sobreescribe a [trans] solo. */
-html[data-milo-transitioning] .nav__logo img { opacity:0; transition:none; }
-html[data-milo-transitioning][data-milo-blending] .nav__logo img { opacity:1; transition:opacity 0.42s linear; }
+/* Etiqueta de sección centrada — páginas interiores (oculta en móvil) */
+.nav__section { color:var(--milo-petroleum); }
+@media (max-width:900px){ .nav__section { display:none; } }
 .nav__links { display:flex; gap:24px; justify-content:center; }
 .nav__link { background:transparent; border:0; padding:10px 0; min-height:44px; display:inline-flex; align-items:center; cursor:pointer; font-weight:400; font-size:13px; letter-spacing:.04em; white-space:nowrap; color:var(--milo-petroleum); border-bottom:1px solid transparent; transition:opacity 160ms,border-color 160ms; }
 .nav__link:hover { opacity:.6; }
@@ -294,9 +295,11 @@ html[data-milo-transitioning][data-milo-blending] .nav__logo img { opacity:1; tr
 .home-row-item.will-animate.is-active { opacity:1; transform:none; }
 
 .home-row { position:relative; display:flex; justify-content:center; padding:48px 0; text-decoration:none; color:var(--milo-petroleum); }
+.home-row:focus-visible { outline:none; }
+.home-row:focus-visible .home-row__media { outline:2px solid var(--milo-petroleum); outline-offset:3px; }
 /* The stage is the image-width positioning context the meta hangs off of. */
 .home-row__stage { position:relative; width:clamp(340px,34vw,520px); }
-.home-row__media { position:relative; width:100%; aspect-ratio:3/2; overflow:hidden; background:var(--milo-paper); }
+.home-row__media { position:relative; width:100%; aspect-ratio:3/2; overflow:hidden; background:var(--milo-paper); outline:2px solid var(--milo-petroleum); outline-offset:3px; }
 .home-row__media img { display:block; will-change:transform; transition:transform var(--dur-slow) var(--ease-out); }
 /* Zoom atado al hover de la imagen: entra al pasar, sale al salir de la foto. */
 .home-row__media:hover img { transform:scale(1.04); }
@@ -358,7 +361,7 @@ html[data-milo-transitioning][data-milo-blending] .nav__logo img { opacity:1; tr
 .tile__sub { font-size:13px; font-weight:300; opacity:.72; }
 
 /* PROJECTS index */
-.projects { padding:96px var(--gutter) 0; max-width:var(--container-wide); margin:0 auto; }
+.projects { padding:56px var(--gutter) 0; max-width:var(--container-wide); margin:0 auto; }
 .projects__title { font-weight:500; font-size:clamp(40px,5vw,72px); line-height:1.05; letter-spacing:-.02em; color:var(--milo-petroleum); margin:0; }
 .projects__filters { display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding-bottom:18px; border-bottom:1px solid var(--milo-petroleum); }
 .projects__count { margin-left:auto; font-size:12px; letter-spacing:.14em; text-transform:uppercase; opacity:.6; }
@@ -382,9 +385,8 @@ html[data-milo-transitioning][data-milo-blending] .nav__logo img { opacity:1; tr
 .status--proyecto { background:transparent; box-shadow:inset 0 0 0 1px var(--milo-petroleum); color:var(--milo-petroleum); }
 
 /* DETAIL */
-/* top padding clears the fixed Orbe mark (top:20px + 44px) so the breadcrumb
-   never sits under the logo on the left edge. */
-.detail { padding:92px var(--gutter) 0; max-width:var(--container-wide); margin:0 auto; }
+/* top padding: contenido respira bajo el nav sticky (~66px) */
+.detail { padding:56px var(--gutter) 0; max-width:var(--container-wide); margin:0 auto; }
 .detail__crumb { display:flex; gap:10px; align-items:center; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--milo-petroleum); }
 .detail__crumb a, .detail__crumb button { background:transparent; border:0; cursor:pointer; color:inherit; font:inherit; padding:0; letter-spacing:inherit; text-transform:inherit; border-bottom:1px solid currentColor; }
 .detail__crumb .sep { opacity:.4; }
@@ -396,7 +398,7 @@ html[data-milo-transitioning][data-milo-blending] .nav__logo img { opacity:1; tr
 .detail__hero-img { width:100%; aspect-ratio:16/9; background:var(--milo-ivory); display:block; object-fit:cover; }
 .detail__intro { display:grid; grid-template-columns:1fr 2fr; gap:64px; padding:96px 0; }
 .detail__facts dl { display:grid; grid-template-columns:max-content 1fr; gap:8px 24px; font-size:13px; font-weight:300; margin:0; }
-.detail__facts dt { font-weight:500; letter-spacing:.14em; text-transform:uppercase; font-size:11px; opacity:.65; padding-top:2px; }
+.detail__facts dt { font-weight:500; letter-spacing:.14em; text-transform:uppercase; font-size:11px; opacity:.75; padding-top:2px; }
 .detail__facts dd { margin:0; padding-bottom:12px; border-bottom:1px solid var(--milo-hairline); }
 .detail__copy { display:flex; flex-direction:column; gap:24px; }
 .detail__copy .t-quote { margin:0; max-width:28ch; color:var(--milo-petroleum); }
@@ -412,7 +414,7 @@ html[data-milo-transitioning][data-milo-blending] .nav__logo img { opacity:1; tr
 .detail__nextprev .arrow { font-size:14px; letter-spacing:.18em; text-transform:uppercase; }
 
 /* STUDIO / SOBRE NOSOTROS */
-.studio { padding:96px var(--gutter) 0; max-width:var(--container-wide); margin:0 auto; }
+.studio { padding:56px var(--gutter) 0; max-width:var(--container-wide); margin:0 auto; }
 .studio__head { display:flex; flex-direction:column; gap:22px; max-width:920px; }
 .studio__title { font-weight:500; font-size:clamp(40px,5.6vw,88px); line-height:1.02; letter-spacing:-.025em; margin:0; }
 .studio__lede { font-size:20px; font-weight:300; line-height:1.5; max-width:56ch; margin:8px 0 0; }
@@ -437,7 +439,7 @@ html[data-milo-transitioning][data-milo-blending] .nav__logo img { opacity:1; tr
 .studio__numbers .l { font-size:12px; letter-spacing:.14em; text-transform:uppercase; opacity:.7; }
 
 /* JOURNAL / DIARIO */
-.journal { padding:96px var(--gutter) 0; max-width:var(--container-wide); margin:0 auto; }
+.journal { padding:56px var(--gutter) 0; max-width:var(--container-wide); margin:0 auto; }
 .journal__head { display:flex; flex-direction:column; gap:18px; max-width:760px; margin-bottom:64px; }
 .journal__title { font-weight:500; font-size:clamp(40px,5.6vw,80px); line-height:1.02; letter-spacing:-.025em; margin:0; }
 .journal__lede { font-size:17px; font-weight:300; line-height:1.5; max-width:52ch; margin:8px 0 0; }
@@ -490,8 +492,8 @@ html[data-milo-transitioning][data-milo-blending] .nav__logo img { opacity:1; tr
 
 /* ── Mobile (≤640px) ────────────────────────────────────────── */
 @media (max-width:640px){
-  /* Tighten the big top paddings so content isn't pushed far down. */
-  .projects, .studio, .journal { padding-top:84px; }
+  /* Tighten top padding on mobile (sticky nav ~66px + some breathing room). */
+  .projects, .studio, .journal { padding-top:48px; }
 
   /* Projects index: the wide table becomes a stacked, tappable list.
      Each row → code (small) / title (large) / "tipo · lugar · año · área"

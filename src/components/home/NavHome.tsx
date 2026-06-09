@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { PROJECT_TYPES } from "@/data/projects";
@@ -34,10 +34,18 @@ const SECTIONS: { label: string; href: string; external?: boolean }[] = [
  */
 export function NavHome({ filter, onFilter }: NavHomeProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 32);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll(); // estado inicial correcto
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <>
-      <header className="nav">
+      <header className={cn("nav", scrolled && "is-scrolled")}>
         <Link href="/" aria-label="Milo — inicio" className="nav__logo">
           <Image
             src="/assets/logo-primary.png"

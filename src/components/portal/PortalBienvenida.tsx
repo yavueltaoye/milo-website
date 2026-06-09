@@ -1,21 +1,42 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { useAudio } from "@/lib/audio";
 import { SITE } from "@/data/site";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { BlueprintLayer } from "./BlueprintLayer";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
-type Phase = "idle" | "exiting";
+type Phase = "idle" | "exiting" | "done";
 
 type FlyConfig = {
-  x0: number; y0: number; s0: number;
-  x1: number; y1: number; s1: number;
-  vw: number; vh: number;
+  endCx: number; endCy: number; // centro de la M destino (wordmark del nav), en viewport
+  w0: number; h0: number;       // tamaño del iso a scale=1 → su M coincide con la M del nav
+  dx: number; dy: number;       // desplazamiento inicial (M del lockup − M del nav)
+  scale0: number;               // escala inicial (M del lockup / M del nav)
 };
+
+// ─── Métricas del glifo "M" dentro de cada asset ───────────────────────────────
+//
+//  Fracciones 0–1 medidas sobre los PNG reales. Permiten que la M despegue
+//  exactamente desde la M del lockup del welcome y aterrice exactamente sobre la
+//  M del wordmark del nav — misma posición y tamaño, sin saltos.
+//
+//  (Reservadas para el modo isotipo. En modo wordmark completo se usa el bounding
+//  rect directo de los elementos del DOM, sin necesidad de estas fracciones.)
+//
+const ISO_M  = { cx: 0.492, cy: 0.509, w: 0.650 }; // iso-ivory.png
+const WORD_M = { cx: 0.251, cy: 0.501, w: 0.3375 }; // logo-primary.png (nav)
+const LOCK_M = { cx: 0.251, cy: 0.428, w: 0.3375 }; // lockup-v-ivory.png (welcome)
+const ISO_ASPECT = 2474 / 2216; // ancho/alto natural del iso
+
+// ─── Modo de vuelo ────────────────────────────────────────────────────────────
+//  "iso"      → vuela solo el isotipo (M + pájaro)
+//  "wordmark" → vuela el wordmark completo "MILO"
+const FLY_MODE = "iso" as "iso" | "wordmark";
 
 // ─── Curvas ───────────────────────────────────────────────────────────────────
 
@@ -24,20 +45,20 @@ const EASE_EXPO:  [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 // ─── Timings ──────────────────────────────────────────────────────────────────
 //
-//  t = 0.00s  Click.
-//             • Lockup se desvanece (0.18s).
-//             • Nav logo → opacity:0 al instante (oculto para el blend).
-//             • Isotipo vuela al M del nav logo (0.55s, expo).
-//  t = 0.45s  Telón empieza a subir (1.30s, expo).
-//  t = 1.33s  CROSS-FADE: iso opacity 1→0 y nav logo opacity 0→1 simultáneamente (0.42s).
-//  t = 1.75s  Telón alzado → enter() → portal desmontado → nav logo a opacity:1.
+//  Todo arranca al mismo tiempo en t=0 — un único gesto unificado.
 //
-const ISO_TRAVEL    = 0.55;
-const CURTAIN_DELAY = 0.45;
-const CURTAIN_DUR   = 1.30;
-const TOTAL         = CURTAIN_DELAY + CURTAIN_DUR; // 1.75s
-const BLEND_START   = TOTAL * 0.76;                // 1.33s — cuando el iso empieza a desvanecerse
-// BLEND_DUR = TOTAL - BLEND_START = 0.42s — sincronizado con el cross-fade CSS
+//  t = 0.00s  Click. Lockup se desvanece (0.28s suave). M despega. Telón sube.
+//             Los tres ocurren simultáneamente: no hay fases separadas.
+//  t = 1.00s  La M aterriza sobre la M del wordmark del nav.
+//  t = 1.05s  Telón alzado — llega justo después que la M, sin esperas.
+//  t = 1.05s→ La M marfil se disuelve (0.30s) sobre el fondo claro,
+//             descubriendo la M petróleo real del wordmark.
+//
+const ISO_TRAVEL    = 1.0;   // coincide con la duración del telón → llegan juntos
+const CURTAIN_DELAY = 0;     // sin pausa — empieza exactamente en el clic
+const CURTAIN_DUR   = 1.05;  // ligeramente mayor que ISO_TRAVEL: M aterriza antes de revelar
+const TOTAL         = CURTAIN_DELAY + CURTAIN_DUR; // 1.05s — telón alzado
+const ISO_FADE      = 0.3;                         // disolvencia final reveladora
 
 // ─── Variantes de entrada ─────────────────────────────────────────────────────
 
@@ -65,55 +86,51 @@ export function PortalBienvenida() {
   const reduced = usePrefersReducedMotion();
   const [phase, setPhase] = useState<Phase>("idle");
   const [fly, setFly] = useState<FlyConfig | null>(null);
-  const lockupRef  = useRef<HTMLDivElement>(null);
-  const blendTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // ── Gestión de atributos en el HTML para controlar el nav logo ──────────────
-  //
-  //  data-milo-transitioning → nav logo opacity:0 (oculto para evitar solapamiento)
-  //  data-milo-blending      → nav logo funde opacity 0→1 (cross-fade con el iso)
-  //
-  useEffect(() => {
-    if (phase === "exiting") {
-      document.documentElement.setAttribute("data-milo-transitioning", "1");
-      document.documentElement.removeAttribute("data-milo-blending");
-    }
-    return () => {
-      // Limpieza al desmontar (cuando entered===true y el portal desaparece).
-      if (blendTimer.current) clearTimeout(blendTimer.current);
-      document.documentElement.removeAttribute("data-milo-transitioning");
-      document.documentElement.removeAttribute("data-milo-blending");
-    };
-  }, [phase]);
+  const lockupRef = useRef<HTMLDivElement>(null);
 
   const handleEnter = () => {
     if (reduced) { enter(); return; }
 
     const el = lockupRef.current;
-    if (!el) { enter(); return; }
+    const navImg = document.querySelector(".nav__logo img") as HTMLElement | null;
+    const nr = navImg?.getBoundingClientRect();
+    if (!el || !nr) { enter(); return; }
 
     const lr = el.getBoundingClientRect();
 
-    // Centro visual del M en el lockup-v (≈55% del ancho, tercio superior)
-    const s0 = lr.width * 0.55;
-    const x0 = lr.left + lr.width / 2;
-    const y0 = lr.top + s0 * 0.48;
+    let endCx: number, endCy: number, w0: number, h0: number;
+    let startCx: number, startCy: number, scale0: number;
 
-    // Destino: la M de "Milo" en la nav.
-    // La M ocupa ≈18% del ancho total del wordmark desde el borde izquierdo.
-    const navImg = document.querySelector(".nav__logo img") as HTMLElement | null;
-    const nr = navImg?.getBoundingClientRect();
-    const s1 = nr ? nr.height : 34;          // iso del mismo alto que el nav logo
-    const x1 = nr ? nr.left + nr.width * 0.18 : 34; // centro de la M en "Milo"
-    const y1 = nr ? nr.top + nr.height / 2 : 33;
+    if (FLY_MODE === "wordmark") {
+      // Wordmark completo: el flying element tiene el mismo tamaño que el nav logo.
+      // El centro de origen es el centro del lockup del welcome.
+      w0      = nr.width;
+      h0      = nr.height;
+      endCx   = nr.left + nr.width  / 2;
+      endCy   = nr.top  + nr.height / 2;
+      startCx = lr.left + lr.width  / 2;
+      startCy = lr.top  + lr.height / 2;
+      scale0  = lr.width / w0;
+    } else {
+      // Modo isotipo: alinea el glifo M de ambos assets con precisión de subpixel.
+      const endMw = WORD_M.w * nr.width;
+      w0      = endMw / ISO_M.w;
+      h0      = w0 / ISO_ASPECT;
+      endCx   = nr.left + WORD_M.cx * nr.width;
+      endCy   = nr.top  + WORD_M.cy * nr.height;
+      const startMw = LOCK_M.w * lr.width;
+      startCx = lr.left + LOCK_M.cx * lr.width;
+      startCy = lr.top  + LOCK_M.cy * lr.height;
+      scale0  = startMw / endMw;
+    }
 
-    setFly({ x0, y0, s0, x1, y1, s1, vw: window.innerWidth, vh: window.innerHeight });
+    setFly({
+      endCx, endCy, w0, h0,
+      dx: startCx - endCx,
+      dy: startCy - endCy,
+      scale0,
+    });
     setPhase("exiting");
-
-    // En t=BLEND_START (1.33s): disparar el cross-fade entre iso y nav logo.
-    blendTimer.current = setTimeout(() => {
-      document.documentElement.setAttribute("data-milo-blending", "1");
-    }, BLEND_START * 1000);
   };
 
   return (
@@ -130,17 +147,20 @@ export function PortalBienvenida() {
             aria-label="Portal de bienvenida"
             className="fixed inset-0 z-[80] flex flex-col items-center justify-center bg-milo-black px-6 text-center"
             initial={{ y: 0 }}
-            animate={phase === "exiting" ? { y: "-100%" } : { y: 0 }}
+            animate={phase === "idle" ? { y: 0 } : { y: "-100%" }}
             exit={{ y: "-100%", transition: { duration: 0 } }}
             transition={
-              phase === "exiting"
-                ? { duration: CURTAIN_DUR, delay: CURTAIN_DELAY, ease: EASE_EXPO }
-                : { duration: 0 }
+              phase === "idle"
+                ? { duration: 0 }
+                : { duration: CURTAIN_DUR, delay: CURTAIN_DELAY, ease: EASE_EXPO }
             }
             onAnimationComplete={() => {
-              if (phase === "exiting") enter();
+              if (phase !== "idle") enter();
             }}
           >
+            {/* Capa de plano arquitectónico — ivory sobre negro, decorativa */}
+            <BlueprintLayer />
+
             {/* Sombra en el borde inferior — efecto cortina física */}
             <div
               aria-hidden="true"
@@ -155,13 +175,13 @@ export function PortalBienvenida() {
               initial={reduced ? undefined : "hidden"}
               animate={reduced ? undefined : "visible"}
             >
-              {/* Lockup: se desvanece rápido para dejar el iso volar solo */}
+              {/* Lockup: se desvanece rápido para dejar la M volar sola */}
               <motion.div
                 ref={lockupRef}
                 variants={reduced ? undefined : logoEntry}
                 animate={
-                  phase === "exiting"
-                    ? { opacity: 0, transition: { duration: 0.18, ease: "easeIn" } }
+                  phase !== "idle"
+                    ? { opacity: 0, transition: { duration: 0.28, ease: EASE_QUART } }
                     : undefined
                 }
               >
@@ -198,61 +218,80 @@ export function PortalBienvenida() {
         )}
       </AnimatePresence>
 
-      {/* ══════════════════════════════════════════════════════
+      {/* ══════════════════════════════════════════════════════════════════════
           ISOTIPO VOLADOR — z-90, por encima del telón (z-80).
-          Viaja sobre el negro, aterriza en la M de "Milo",
-          y se funde con el nav logo mediante un cross-fade.
-          ══════════════════════════════════════════════════════ */}
+          Despega ivory del lockup y hace un crossfade → petróleo DURANTE el
+          viaje, de modo que al aterrizar sobre el nav ya tiene el color exacto
+          del wordmark real. Integración seamless: no hay corte ni dissolve final
+          visible, la M simplemente "se convierte" en el logotipo mientras vuela.
+          ══════════════════════════════════════════════════════════════════════ */}
       <AnimatePresence>
-        {phase === "exiting" && fly && !entered && (
+        {phase === "exiting" && fly && (
           <motion.div
             key="flying-iso"
             style={{
               position: "fixed",
-              left: "50%",
-              top: "50%",
-              width: fly.s1,
-              height: fly.s1,
-              marginLeft: -fly.s1 / 2,
-              marginTop: -fly.s1 / 2,
+              left: fly.endCx,
+              top: fly.endCy,
+              width: fly.w0,
+              height: fly.h0,
+              marginLeft: -fly.w0 / 2,
+              marginTop: -fly.h0 / 2,
               zIndex: 90,
               pointerEvents: "none",
             }}
-            initial={{
-              x: fly.x0 - fly.vw / 2,
-              y: fly.y0 - fly.vh / 2,
-              scale: fly.s0 / fly.s1,
-              opacity: 1,
-            }}
-            animate={{
-              x: fly.x1 - fly.vw / 2,
-              y: fly.y1 - fly.vh / 2,
-              scale: 1,
-              // El iso permanece opaco durante el viaje y el barrido del telón.
-              // Se desvanece solo en el cross-fade final (t=1.33s → t=1.75s).
-              opacity: [1, 1, 0] as [number, number, number],
-            }}
+            initial={{ x: fly.dx, y: fly.dy, scale: fly.scale0 }}
+            animate={{ x: 0, y: 0, scale: 1 }}
             transition={{
               x:     { duration: ISO_TRAVEL, ease: EASE_EXPO },
               y:     { duration: ISO_TRAVEL, ease: EASE_EXPO },
               scale: { duration: ISO_TRAVEL, ease: EASE_EXPO },
-              // La opacidad se gestiona en TOTAL segundos para que el fade-out
-              // ocurra exactamente en la ventana del cross-fade (t=1.33s → 1.75s).
-              opacity: {
-                times:    [0, BLEND_START / TOTAL, 1],
-                duration: TOTAL,
-                ease:     "linear",
-              },
             }}
           >
-            <Image
-              src="/assets/iso-ivory.png"
-              alt=""
-              fill
-              sizes={`${Math.round(fly.s1 * 3)}px`}
-              className="object-contain"
-              priority
-            />
+            {/* Capa ivory — sale opaca y se desvanece linealmente durante el vuelo */}
+            <motion.div
+              className="absolute inset-0"
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 0 }}
+              transition={{ duration: ISO_TRAVEL, ease: "linear" }}
+            >
+              <Image
+                src={FLY_MODE === "wordmark" ? "/assets/logo-ivory.png" : "/assets/iso-ivory.png"}
+                alt=""
+                fill
+                sizes={`${Math.round(fly.w0 * 3)}px`}
+                className="object-contain"
+                priority
+              />
+            </motion.div>
+
+            {/* Capa petróleo — aparece durante el vuelo (crossfade con ivory),
+                llega completa al destino y se disuelve brevemente al revelar nav */}
+            <motion.div
+              className="absolute inset-0"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 1, 1, 0] }}
+              transition={{
+                duration: ISO_TRAVEL + ISO_FADE,
+                times: [
+                  0,
+                  ISO_TRAVEL / (ISO_TRAVEL + ISO_FADE),            // peak: llega al nav
+                  (ISO_TRAVEL + 0.05) / (ISO_TRAVEL + ISO_FADE),   // hold breve
+                  1,                                                 // fade final
+                ],
+                ease: ["linear", "linear", "easeIn"],
+              }}
+              onAnimationComplete={() => setPhase("done")}
+            >
+              <Image
+                src={FLY_MODE === "wordmark" ? "/assets/logo-primary.png" : "/assets/iso-primary.png"}
+                alt=""
+                fill
+                sizes={`${Math.round(fly.w0 * 3)}px`}
+                className="object-contain"
+                priority
+              />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

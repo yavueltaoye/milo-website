@@ -6,16 +6,11 @@ type FichaTecnicaProps = {
 
 /** Technical sheet for a project rendered as a definition list. */
 export function FichaTecnica({ project }: FichaTecnicaProps) {
-  const facts: { label: string; value: string }[] = [
-    { label: "Tipo", value: project.type },
-    { label: "Ubicación", value: project.loc },
-    { label: "Año", value: project.year },
-    { label: "Área", value: project.area },
+  const facts = [
     { label: "Estado", value: project.status },
     { label: "Cliente", value: project.client },
     { label: "Equipo", value: project.team },
-    { label: "Fotografía", value: project.photographer },
-  ];
+  ].filter((f) => f.value && f.value.toLowerCase() !== "privado");
 
   return (
     <div className="detail__facts">

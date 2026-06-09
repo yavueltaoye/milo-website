@@ -12,13 +12,15 @@ export const metadata: Metadata = {
 
 export default function ProyectosPage() {
   return (
-    <main className="min-h-screen bg-paper text-petroleum">
-      <InteriorNav />
-      <header className="projects pb-2">
-        <h1 className="projects__title">Proyectos</h1>
-      </header>
-      <IndiceProyectos />
-      <Footer />
-    </main>
+    <>
+      <InteriorNav section="Proyectos" />
+      <main className="min-h-screen bg-paper text-petroleum">
+        <header className="projects pb-2">
+          <h1 className="projects__title">Proyectos</h1>
+        </header>
+        <IndiceProyectos />
+        <Footer />
+      </main>
+    </>
   );
 }

@@ -15,10 +15,9 @@ export const metadata: Metadata = {
 export default function SobreNosotrosPage() {
   return (
     <>
-      <InteriorNav />
+      <InteriorNav section="El estudio" />
       <main className="studio">
         <div className="studio__head">
-          <span className="t-eyebrow">El estudio</span>
           <h1 className="studio__title">
             Arquitectura que se habita con los sentidos
           </h1>

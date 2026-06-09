@@ -34,7 +34,6 @@ export function MenuOverlay({ open, onClose }: MenuOverlayProps) {
   const restoreRef = useRef<HTMLElement | null>(null);
 
   const destinations: Destination[] = [
-    { label: "Proyectos", href: "/proyectos" },
     { label: "Sobre Nosotros", href: "/sobre-nosotros" },
     {
       label: "Contacto",

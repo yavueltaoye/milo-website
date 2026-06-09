@@ -16,7 +16,6 @@ export default function DiarioPage() {
       <InteriorNav />
       <main className="journal">
         <header className="journal__head">
-          <span className="t-eyebrow">Diario</span>
           <h1 className="journal__title">Diario</h1>
           <p className="journal__lede">
             El cuaderno abierto del estudio. Aquí van nuestras notas de prensa,

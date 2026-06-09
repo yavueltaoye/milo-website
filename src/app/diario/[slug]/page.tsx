@@ -41,7 +41,7 @@ export default async function EntradaPage({ params }: PageProps) {
 
   return (
     <>
-      <InteriorNav />
+      <InteriorNav section="Diario" />
       <main className="detail">
         <Entrada entry={entry} />
         <p className="detail__crumb mt-16 mb-24">
