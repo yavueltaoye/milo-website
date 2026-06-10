@@ -7,9 +7,13 @@
  * overwriting in place only when the result is actually smaller. Next.js still
  * serves AVIF/WebP at request time on top of these.
  *
+ * PNG files without alpha channel are converted to JPEG (mozjpeg q78) — this
+ * yields 70-85% size reduction for architectural photography with no alpha.
+ * PNGs with alpha are kept as PNG (logos, composites, etc.)
+ *
  * Run: node scripts/optimize-images.mjs
  */
-import { readdir, stat, writeFile, readFile } from "node:fs/promises";
+import { readdir, stat, writeFile, readFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
@@ -30,6 +34,7 @@ const fmt = (bytes) => `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 let totalBefore = 0;
 let totalAfter = 0;
 let changed = 0;
+let converted = 0;
 let scanned = 0;
 
 for await (const file of walk(ROOT)) {
@@ -47,25 +52,40 @@ for await (const file of walk(ROOT)) {
   if (Math.max(meta.width ?? 0, meta.height ?? 0) > MAX) {
     pipe = pipe.resize({ width: MAX, height: MAX, fit: "inside", withoutEnlargement: true });
   }
-  pipe =
-    ext === ".png"
+
+  // PNG without alpha channel → convert to JPEG (huge savings for photography).
+  // PNG with alpha → keep as PNG (logos, composites with transparency).
+  const pngNoAlpha = ext === ".png" && !meta.hasAlpha;
+
+  if (pngNoAlpha) {
+    const jpgFile = file.replace(/\.png$/i, ".jpg");
+    const buf = await pipe.jpeg({ quality: 78, mozjpeg: true }).toBuffer();
+    await writeFile(jpgFile, buf);
+    await unlink(file);
+    totalBefore += before;
+    totalAfter += buf.length;
+    converted++;
+    console.log(`⟳ ${path.relative(ROOT, file)} → .jpg  ${fmt(before)} → ${fmt(buf.length)}`);
+  } else {
+    pipe = ext === ".png"
       ? pipe.png({ compressionLevel: 9, effort: 8 })
       : pipe.jpeg({ quality: 78, mozjpeg: true });
 
-  const buf = await pipe.toBuffer();
-  totalBefore += before;
+    const buf = await pipe.toBuffer();
+    totalBefore += before;
 
-  if (buf.length < before) {
-    await writeFile(file, buf);
-    totalAfter += buf.length;
-    changed++;
-    console.log(`✓ ${path.relative(ROOT, file)}  ${fmt(before)} → ${fmt(buf.length)}`);
-  } else {
-    totalAfter += before;
+    if (buf.length < before) {
+      await writeFile(file, buf);
+      totalAfter += buf.length;
+      changed++;
+      console.log(`✓ ${path.relative(ROOT, file)}  ${fmt(before)} → ${fmt(buf.length)}`);
+    } else {
+      totalAfter += before;
+    }
   }
 }
 
 console.log(
-  `\nDone. ${changed}/${scanned} re-encoded. ${fmt(totalBefore)} → ${fmt(totalAfter)} ` +
-    `(saved ${fmt(totalBefore - totalAfter)}).`,
+  `\nDone. ${changed}/${scanned} re-encoded, ${converted} PNG→JPEG converted. ` +
+    `${fmt(totalBefore)} → ${fmt(totalAfter)} (saved ${fmt(totalBefore - totalAfter)}).`,
 );

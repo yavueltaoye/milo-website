@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Project } from "@/data/projects";
+import { blurMap } from "@/data/blurMap";
 
 type HeroProps = {
   project: Project;
@@ -38,6 +39,8 @@ export function Hero({ project }: HeroProps) {
           priority
           sizes="100vw"
           className="detail__hero-img"
+          placeholder={blurMap[project.hero] ? "blur" : "empty"}
+          blurDataURL={blurMap[project.hero]}
         />
       </figure>
     </header>

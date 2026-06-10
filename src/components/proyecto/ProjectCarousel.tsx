@@ -7,6 +7,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { cn } from "@/lib/utils";
+import { blurMap } from "@/data/blurMap";
 
 type ProjectCarouselProps = {
   /** Ordered image URLs (hero first, then gallery). Length N — scales freely. */
@@ -150,6 +151,8 @@ export function ProjectCarousel({ images, title }: ProjectCarouselProps) {
                   sizes="(max-width: 768px) 100vw, 70vw"
                   className="scale-[1.15] select-none object-cover"
                   draggable={false}
+                  placeholder={blurMap[src] ? "blur" : "empty"}
+                  blurDataURL={blurMap[src]}
                 />
               </div>
             </div>

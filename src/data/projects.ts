@@ -55,9 +55,9 @@ export const PROJECTS: Project[] = [
     slug: "eurorenting",
     hero: "/images/projects/eurorenting/hero.png",
     gallery: [
-      "/images/projects/eurorenting/g1.png",
-      "/images/projects/eurorenting/g2.png",
-      "/images/projects/eurorenting/g3.png",
+      "/images/projects/eurorenting/g1.jpg",
+      "/images/projects/eurorenting/g2.jpg",
+      "/images/projects/eurorenting/g3.jpg",
     ],
     quote: "El espacio de trabajo como declaración de marca. Cada material habla antes que cualquier logotipo.",
     body: [
@@ -303,10 +303,10 @@ export const PROJECTS: Project[] = [
     area: "320 m²",
     status: "En obra",
     slug: "trujillo",
-    hero: "/images/projects/trujillo/hero.png",
+    hero: "/images/projects/trujillo/hero.jpg",
     gallery: [
-      "/images/projects/trujillo/g1.png",
-      "/images/projects/trujillo/g2.png",
+      "/images/projects/trujillo/g1.jpg",
+      "/images/projects/trujillo/g2.jpg",
       "/images/projects/trujillo/g3.jpeg",
     ],
     quote: "Construir en Trujillo es leer el sol antes que el plano. Orientación, sombra, ventilación — en ese orden.",

@@ -4,28 +4,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ============================================================
-   MILO — Human Sans (design system fonts)
-   ============================================================ */
-@font-face { font-family:"Human Sans"; src:url("/fonts/HumanSans-Thin.otf") format("opentype"); font-weight:100; font-style:normal; font-display:swap; }
-@font-face { font-family:"Human Sans"; src:url("/fonts/HumanSans-ThinOblique.otf") format("opentype"); font-weight:100; font-style:oblique; font-display:swap; }
-@font-face { font-family:"Human Sans"; src:url("/fonts/HumanSans-ExtraLight.otf") format("opentype"); font-weight:200; font-style:normal; font-display:swap; }
-@font-face { font-family:"Human Sans"; src:url("/fonts/HumanSans-ExtraLightOblique.otf") format("opentype"); font-weight:200; font-style:oblique; font-display:swap; }
-@font-face { font-family:"Human Sans"; src:url("/fonts/HumanSans-Light.otf") format("opentype"); font-weight:300; font-style:normal; font-display:swap; }
-@font-face { font-family:"Human Sans"; src:url("/fonts/HumanSans-LightOblique.otf") format("opentype"); font-weight:300; font-style:oblique; font-display:swap; }
-@font-face { font-family:"Human Sans"; src:url("/fonts/HumanSans-Regular.otf") format("opentype"); font-weight:400; font-style:normal; font-display:swap; }
-@font-face { font-family:"Human Sans"; src:url("/fonts/HumanSans-RegularOblique.otf") format("opentype"); font-weight:400; font-style:oblique; font-display:swap; }
-@font-face { font-family:"Human Sans"; src:url("/fonts/HumanSans-Medium.otf") format("opentype"); font-weight:500; font-style:normal; font-display:swap; }
-@font-face { font-family:"Human Sans"; src:url("/fonts/HumanSans-MediumOblique.otf") format("opentype"); font-weight:500; font-style:oblique; font-display:swap; }
-@font-face { font-family:"Human Sans"; src:url("/fonts/HumanSans-Bold.otf") format("opentype"); font-weight:700; font-style:normal; font-display:swap; }
-@font-face { font-family:"Human Sans"; src:url("/fonts/HumanSans-BoldOblique.otf") format("opentype"); font-weight:700; font-style:oblique; font-display:swap; }
-@font-face { font-family:"Human Sans"; src:url("/fonts/HumanSans-Black.otf") format("opentype"); font-weight:900; font-style:normal; font-display:swap; }
-@font-face { font-family:"Human Sans"; src:url("/fonts/HumanSans-BlackOblique.otf") format("opentype"); font-weight:900; font-style:oblique; font-display:swap; }
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Human Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-sans: var(--font-human-sans), "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
   --font-heading: var(--font-sans);
   /* MILO palette → Tailwind utilities (bg-petroleum, text-ivory, …) */

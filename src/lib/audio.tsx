@@ -49,7 +49,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={{ enabled, entered, enter, toggle }}>
       {/* Never autoplays: only starts after the user gesture in enter(). */}
-      <audio ref={ref} src={SITE.audioSrc} loop preload="auto" />
+      <audio ref={ref} src={SITE.audioSrc} loop preload="none" />
       {children}
     </Ctx.Provider>
   );

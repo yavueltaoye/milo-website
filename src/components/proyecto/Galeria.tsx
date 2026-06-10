@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useStaggerReveal } from "@/hooks/useStaggerReveal";
+import { blurMap } from "@/data/blurMap";
 
 type GaleriaProps = {
   images: string[];
@@ -31,6 +32,8 @@ export function Galeria({ images, title }: GaleriaProps) {
               fill
               sizes={shape.sizes}
               className="gallery-img"
+              placeholder={blurMap[src] ? "blur" : "empty"}
+              blurDataURL={blurMap[src]}
             />
           </div>
         );
