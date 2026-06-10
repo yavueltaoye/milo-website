@@ -49,7 +49,16 @@ const gridFade: Variants = {
   visible: { opacity: 1, transition: { duration: 0.8, ease: EASE_QUART, delay: T.GRID } },
 };
 
-// ─── CSS grilla ────────────────────────────────────────────────────────────────
+// ─── CSS grilla — centrada en el isotipo ───────────────────────────────────────
+//
+//  La grilla fina repite cada 32px y la major cada 160px.
+//  backgroundPosition "calc(50% + 80px)" desplaza el origen de la grilla 80px
+//  (= la mitad de 160px) respecto al centro del contenedor, de modo que:
+//    · Las líneas major verticales caen en 50%−80px y 50%+80px → isotipo centrado entre ellas
+//    · Las líneas fine verticales caen en 50%−16px y 50%+16px → simetría total
+//  El isotipo MILO queda exactamente entre dos líneas verticales en cualquier pantalla.
+
+const OFFSET = "calc(50% + 80px)";
 
 const GRID_STYLE: React.CSSProperties = {
   backgroundImage: [
@@ -58,6 +67,7 @@ const GRID_STYLE: React.CSSProperties = {
     `repeating-linear-gradient(0deg,  ${C.major} 0 1px, transparent 1px 160px)`,
     `repeating-linear-gradient(90deg, ${C.major} 0 1px, transparent 1px 160px)`,
   ].join(", "),
+  backgroundPosition: [OFFSET, OFFSET, OFFSET, OFFSET].join(", "),
 };
 
 // ─── Atributos SVG ─────────────────────────────────────────────────────────────
@@ -65,42 +75,17 @@ const GRID_STYLE: React.CSSProperties = {
 const SW     = { stroke: C.line, strokeWidth: 0.75, fill: "none", vectorEffect: "non-scaling-stroke" } as const;
 const SW_DIM = { ...SW, stroke: C.dim } as const;
 
-// ─── SVG del plano — zona segura universal ─────────────────────────────────────
+// ─── SVG del plano ─────────────────────────────────────────────────────────────
 //
-//  viewBox 1000×1000. Con preserveAspectRatio="xMidYMid slice" cada dispositivo
-//  recorta un área distinta del SVG:
-//
-//   iPhone 390×844  → x visible: 269–731  /  y visible: 0–1000
-//   iPad  768×1024  → x visible: 125–875  /  y visible: 0–1000
-//   Desktop 1440×900→ x visible: 0–1000   /  y visible: 188–813
-//   Desktop 1920×1080→x visible: 0–1000   /  y visible: 219–781
-//
-//  Zona segura (siempre visible en todos los dispositivos): x=270–730, y=220–780
-//
-//  Diseño: isotipo MILO enmarcado entre DOS LÍNEAS VERTICALES de cota, simétricas
-//  respecto al eje x=500. El logo ocupa aprox. x=420–580, y=460–540 en unidades SVG.
-//  Las líneas en x=350 y x=650 le dan ~70 unidades de margen a cada lado.
-//
-//  Elementos — todos dentro de la zona segura:
-//   1. Dos cotas verticales   x=350 y x=650 (y=240→760)
-//   2. Cap horizontal superior y=240 con ticks y flechas hacia adentro
-//   3. Cap horizontal inferior y=760 (espejo)
-//   4. Tick de punto medio en y=500 sobre cada cota vertical
-//   5. Marcas de esquina en los 4 vértices del rectángulo de medición
-//   6. Barra de escala centrada en y=730 (entre las dos cotas)
+//  Elementos decorativos del plano arquitectónico. El marco y las cotas exteriores
+//  pueden quedar parcialmente fuera de pantalla en móvil — son decoración de fondo.
+//  El efecto principal (isotipo entre líneas) lo da la grilla CSS centrada arriba.
 
 function BlueprintSvg() {
   const sFrame   = drawAt(T.FRAME);
   const sDim     = drawAt(T.DIM);
   const fDim     = fadeAt(T.DIM + 0.6);
   const sDetails = drawAt(T.DETAILS);
-
-  // Coordenadas del rectángulo de medición
-  const L = 350;  // cota izquierda
-  const R = 650;  // cota derecha
-  const T_ = 240; // cap superior
-  const B  = 760; // cap inferior
-  const M  = 500; // eje central
 
   return (
     <svg
@@ -109,56 +94,59 @@ function BlueprintSvg() {
       preserveAspectRatio="xMidYMid slice"
       className="absolute inset-0 h-full w-full"
     >
-      {/* ── 1. Cota vertical izquierda (x=350) ───────────────────────────── */}
-      <motion.line variants={sDim} x1={L} y1={T_} x2={L} y2={B} {...SW_DIM} />
+      {/* ── 1. Marco inset ────────────────────────────────────────────────── */}
+      <motion.rect
+        variants={sFrame}
+        x={50} y={50} width={900} height={900}
+        {...SW}
+      />
 
-      {/* ── 2. Cota vertical derecha (x=650) ─────────────────────────────── */}
-      <motion.line variants={sDim} x1={R} y1={T_} x2={R} y2={B} {...SW_DIM} />
+      {/* ── 2. Cota horizontal (y=88) — flechas simétricas en ambos extremos */}
+      <motion.line variants={sDim} x1={50}  y1={88} x2={950} y2={88} {...SW_DIM} />
+      <motion.line variants={sDim} x1={50}  y1={81} x2={50}  y2={95} {...SW_DIM} />
+      <motion.line variants={sDim} x1={950} y1={81} x2={950} y2={95} {...SW_DIM} />
+      {/* Par izquierdo */}
+      <motion.path variants={fDim} d="M210,88 L221,83 L221,93 Z" fill={C.dim} stroke="none" />
+      <motion.path variants={fDim} d="M250,88 L239,83 L239,93 Z" fill={C.dim} stroke="none" />
+      {/* Par derecho — espejo */}
+      <motion.path variants={fDim} d="M790,88 L779,83 L779,93 Z" fill={C.dim} stroke="none" />
+      <motion.path variants={fDim} d="M750,88 L761,83 L761,93 Z" fill={C.dim} stroke="none" />
 
-      {/* ── 3. Cap horizontal SUPERIOR (y=240) ───────────────────────────── */}
-      {/* Línea principal */}
-      <motion.line variants={sDim} x1={L - 10} y1={T_} x2={R + 10} y2={T_} {...SW_DIM} />
-      {/* Ticks en cada extremo de las cotas verticales */}
-      <motion.line variants={sDim} x1={L} y1={T_ - 12} x2={L} y2={T_ + 12} {...SW_DIM} />
-      <motion.line variants={sDim} x1={R} y1={T_ - 12} x2={R} y2={T_ + 12} {...SW_DIM} />
-      {/* Flechas apuntando hacia adentro (← y →, simétricas respecto a x=500) */}
-      {/* Flecha izquierda: punta en x=390, base en x=379 → apunta hacia la derecha */}
-      <motion.path variants={fDim} d={`M${L + 40},${T_} L${L + 29},${T_ - 5} L${L + 29},${T_ + 5} Z`} fill={C.dim} stroke="none" />
-      {/* Flecha derecha: punta en x=610, base en x=621 → apunta hacia la izquierda */}
-      <motion.path variants={fDim} d={`M${R - 40},${T_} L${R - 29},${T_ - 5} L${R - 29},${T_ + 5} Z`} fill={C.dim} stroke="none" />
+      {/* ── 3. Cota vertical (x=88) — flechas simétricas en ambos extremos ─ */}
+      <motion.line variants={sDim} x1={88} y1={50}  x2={88} y2={950} {...SW_DIM} />
+      <motion.line variants={sDim} x1={81} y1={50}  x2={95} y2={50}  {...SW_DIM} />
+      <motion.line variants={sDim} x1={81} y1={950} x2={95} y2={950} {...SW_DIM} />
+      {/* Par superior */}
+      <motion.path variants={fDim} d="M88,210 L83,221 L93,221 Z" fill={C.dim} stroke="none" />
+      <motion.path variants={fDim} d="M88,250 L83,239 L93,239 Z" fill={C.dim} stroke="none" />
+      {/* Par inferior — espejo */}
+      <motion.path variants={fDim} d="M88,790 L83,779 L93,779 Z" fill={C.dim} stroke="none" />
+      <motion.path variants={fDim} d="M88,750 L83,761 L93,761 Z" fill={C.dim} stroke="none" />
 
-      {/* ── 4. Cap horizontal INFERIOR (y=760) — espejo exacto ───────────── */}
-      <motion.line variants={sDim} x1={L - 10} y1={B} x2={R + 10} y2={B} {...SW_DIM} />
-      <motion.line variants={sDim} x1={L} y1={B - 12} x2={L} y2={B + 12} {...SW_DIM} />
-      <motion.line variants={sDim} x1={R} y1={B - 12} x2={R} y2={B + 12} {...SW_DIM} />
-      <motion.path variants={fDim} d={`M${L + 40},${B} L${L + 29},${B - 5} L${L + 29},${B + 5} Z`} fill={C.dim} stroke="none" />
-      <motion.path variants={fDim} d={`M${R - 40},${B} L${R - 29},${B - 5} L${R - 29},${B + 5} Z`} fill={C.dim} stroke="none" />
+      {/* ── 4. Crosshairs en las 4 esquinas del marco ────────────────────── */}
+      <motion.line   variants={sDetails} x1={60}  y1={80}  x2={100} y2={80}  {...SW} />
+      <motion.line   variants={sDetails} x1={80}  y1={60}  x2={80}  y2={100} {...SW} />
+      <motion.circle variants={sDetails} cx={80}  cy={80}  r={10}             {...SW} />
 
-      {/* ── 5. Tick de punto medio en y=500 sobre cada cota vertical ─────── */}
-      <motion.line variants={sDetails} x1={L - 8} y1={M} x2={L + 8} y2={M} {...SW} />
-      <motion.line variants={sDetails} x1={R - 8} y1={M} x2={R + 8} y2={M} {...SW} />
+      <motion.line   variants={sDetails} x1={900} y1={80}  x2={940} y2={80}  {...SW} />
+      <motion.line   variants={sDetails} x1={920} y1={60}  x2={920} y2={100} {...SW} />
+      <motion.circle variants={sDetails} cx={920} cy={80}  r={10}             {...SW} />
 
-      {/* ── 6. Marcas de esquina en los 4 vértices del rectángulo ────────── */}
-      {/* Superior izquierda */}
-      <motion.line variants={sDetails} x1={L}      y1={T_}      x2={L + 20} y2={T_}      {...SW} />
-      <motion.line variants={sDetails} x1={L}      y1={T_}      x2={L}      y2={T_ + 20} {...SW} />
-      {/* Superior derecha */}
-      <motion.line variants={sDetails} x1={R}      y1={T_}      x2={R - 20} y2={T_}      {...SW} />
-      <motion.line variants={sDetails} x1={R}      y1={T_}      x2={R}      y2={T_ + 20} {...SW} />
-      {/* Inferior izquierda */}
-      <motion.line variants={sDetails} x1={L}      y1={B}       x2={L + 20} y2={B}       {...SW} />
-      <motion.line variants={sDetails} x1={L}      y1={B}       x2={L}      y2={B - 20}  {...SW} />
-      {/* Inferior derecha */}
-      <motion.line variants={sDetails} x1={R}      y1={B}       x2={R - 20} y2={B}       {...SW} />
-      <motion.line variants={sDetails} x1={R}      y1={B}       x2={R}      y2={B - 20}  {...SW} />
+      <motion.line   variants={sDetails} x1={60}  y1={920} x2={100} y2={920} {...SW} />
+      <motion.line   variants={sDetails} x1={80}  y1={900} x2={80}  y2={940} {...SW} />
+      <motion.circle variants={sDetails} cx={80}  cy={920} r={10}             {...SW} />
 
-      {/* ── 7. Barra de escala — centrada en x=500, dentro del marco ─────── */}
-      <motion.line variants={sDetails} x1={440} y1={730} x2={560} y2={730} {...SW} />
-      <motion.line variants={sDetails} x1={440} y1={724} x2={440} y2={736} {...SW} />
-      <motion.line variants={sDetails} x1={470} y1={724} x2={470} y2={736} {...SW} />
-      <motion.line variants={sDetails} x1={500} y1={724} x2={500} y2={736} {...SW} />
-      <motion.line variants={sDetails} x1={530} y1={724} x2={530} y2={736} {...SW} />
-      <motion.line variants={sDetails} x1={560} y1={724} x2={560} y2={736} {...SW} />
+      <motion.line   variants={sDetails} x1={900} y1={920} x2={940} y2={920} {...SW} />
+      <motion.line   variants={sDetails} x1={920} y1={900} x2={920} y2={940} {...SW} />
+      <motion.circle variants={sDetails} cx={920} cy={920} r={10}             {...SW} />
+
+      {/* ── 5. Barra de escala — centrada en el borde inferior ────────────── */}
+      <motion.line variants={sDetails} x1={430} y1={940} x2={570} y2={940} {...SW} />
+      <motion.line variants={sDetails} x1={430} y1={934} x2={430} y2={946} {...SW} />
+      <motion.line variants={sDetails} x1={465} y1={934} x2={465} y2={946} {...SW} />
+      <motion.line variants={sDetails} x1={500} y1={934} x2={500} y2={946} {...SW} />
+      <motion.line variants={sDetails} x1={535} y1={934} x2={535} y2={946} {...SW} />
+      <motion.line variants={sDetails} x1={570} y1={934} x2={570} y2={946} {...SW} />
     </svg>
   );
 }
