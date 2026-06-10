@@ -281,7 +281,7 @@ a { color: var(--milo-petroleum); text-decoration: none; }
 .home-row:focus-visible .home-row__media { outline:2px solid var(--milo-petroleum); outline-offset:3px; }
 /* The stage is the image-width positioning context the meta hangs off of. */
 .home-row__stage { position:relative; width:clamp(340px,34vw,520px); }
-.home-row__media { position:relative; width:100%; aspect-ratio:3/2; overflow:hidden; background:var(--milo-paper); outline:2px solid var(--milo-petroleum); outline-offset:3px; }
+.home-row__media { position:relative; width:100%; aspect-ratio:3/2; overflow:hidden; background:var(--milo-paper); }
 .home-row__media img { display:block; will-change:transform; transition:transform var(--dur-slow) var(--ease-out); }
 /* Zoom atado al hover de la imagen: entra al pasar, sale al salir de la foto. */
 .home-row__media:hover img { transform:scale(1.04); }
@@ -304,7 +304,7 @@ a { color: var(--milo-petroleum); text-decoration: none; }
   .home-row { padding:32px var(--gutter); }
   .home-row__stage { width:100%; max-width:680px; }
   .home-row__media { aspect-ratio:4/3; }
-  .home-row__meta { position:static; transform:none; left:auto; max-width:none; flex-direction:row; align-items:center; gap:14px; text-align:left; margin-bottom:16px; }
+  .home-row__meta { position:static; transform:none; left:auto; max-width:none; flex-direction:row; align-items:flex-end; gap:14px; text-align:left; margin-bottom:16px; }
   .home-row__text { margin-top:0; }
   .home-glyph { width:40px; height:40px; }
 }
