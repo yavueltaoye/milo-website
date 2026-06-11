@@ -30,7 +30,7 @@ type FlyConfig = {
 //
 const ISO_M  = { cx: 0.492, cy: 0.509, w: 0.650 }; // iso-ivory.png
 const WORD_M = { cx: 0.251, cy: 0.501, w: 0.3375 }; // logo-primary.png (nav)
-const LOCK_M = { cx: 0.251, cy: 0.428, w: 0.3375 }; // lockup-v-ivory.png (welcome)
+const LOCK_M = { cx: ISO_M.cx, cy: ISO_M.cy, w: ISO_M.w }; // iso-ivory.png (welcome) — M centrada al ~49%
 const ISO_ASPECT = 2474 / 2216; // ancho/alto natural del iso
 
 // ─── Modo de vuelo ────────────────────────────────────────────────────────────
@@ -175,24 +175,29 @@ export function PortalBienvenida() {
               initial={reduced ? undefined : "hidden"}
               animate={reduced ? undefined : "visible"}
             >
-              {/* Lockup: se desvanece rápido para dejar la M volar sola */}
+              {/* Isotipo: se desvanece rápido para dejar la M volar sola */}
               <motion.div
-                ref={lockupRef}
                 variants={reduced ? undefined : logoEntry}
                 animate={
                   phase !== "idle"
                     ? { opacity: 0, transition: { duration: 0.28, ease: EASE_QUART } }
                     : undefined
                 }
+                className="flex flex-col items-center gap-4"
               >
-                <Image
-                  src="/assets/lockup-v-ivory.png"
-                  alt={SITE.name}
-                  width={376}
-                  height={200}
-                  priority
-                  className="h-auto w-32 select-none sm:w-40"
-                />
+                <div ref={lockupRef}>
+                  <Image
+                    src="/assets/iso-ivory.png"
+                    alt={SITE.name}
+                    width={2474}
+                    height={2216}
+                    priority
+                    className="h-auto w-28 select-none sm:w-36 md:w-44"
+                  />
+                </div>
+                <p className="text-[11px] tracking-[0.24em] uppercase text-ivory/50">
+                  Estudio creativo
+                </p>
               </motion.div>
 
               {/* Tagline y botón — suben con el telón (sin fade propio) */}
