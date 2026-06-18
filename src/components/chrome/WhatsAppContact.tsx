@@ -87,9 +87,9 @@ export function WhatsAppContact({ waUrl, children, className }: Props) {
               <Image
                 src="/assets/qr-whatsapp.jpeg"
                 alt="WhatsApp QR — Milo Estudio Creativo"
-                width={260}
-                height={260}
-                className="h-64 w-64 object-contain"
+                width={292}
+                height={497}
+                className="h-auto w-56 object-contain"
                 priority
               />
 
