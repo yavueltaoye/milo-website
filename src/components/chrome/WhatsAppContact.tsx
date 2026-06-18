@@ -118,7 +118,7 @@ export function WhatsAppContact({ waUrl, children, className }: Props) {
                     alt="Milo"
                     width={4933}
                     height={2216}
-                    className="h-7 w-auto select-none"
+                    className="h-12 w-auto select-none"
                   />
 
                   <div className="flex flex-col gap-1">
