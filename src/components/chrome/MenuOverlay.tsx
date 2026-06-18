@@ -159,8 +159,6 @@ export function MenuOverlay({ open, onClose }: MenuOverlayProps) {
               <WhatsAppContact
                 waUrl={buildWhatsAppUrl(SITE.whatsappPhone)}
                 className="text-3xl font-light tracking-tight transition-opacity duration-200 hover:opacity-60 md:text-[2.5rem]"
-                placement="below"
-                popoverAlign="left"
               >
                 Contacto
               </WhatsAppContact>

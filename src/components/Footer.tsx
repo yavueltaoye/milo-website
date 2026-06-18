@@ -33,8 +33,6 @@ export function Footer() {
           <span className="t-eyebrow">Contacto</span>
           <WhatsAppContact
             waUrl={buildWhatsAppUrl(SITE.whatsappPhone)}
-            placement="above"
-            popoverAlign="left"
           >
             WhatsApp
           </WhatsAppContact>

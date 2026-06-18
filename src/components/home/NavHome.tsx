@@ -79,8 +79,6 @@ export function NavHome({ filter, onFilter }: NavHomeProps) {
             <WhatsAppContact
               waUrl={buildWhatsAppUrl(SITE.whatsappPhone)}
               className="nav__link"
-              placement="below"
-              popoverAlign="right"
             >
               Contacto
             </WhatsAppContact>

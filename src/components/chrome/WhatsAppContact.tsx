@@ -1,57 +1,39 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Props = {
   waUrl: string;
   children: ReactNode;
   className?: string;
-  /** Where the QR popover appears relative to the trigger. Default: "below". */
-  placement?: "above" | "below";
-  /** Horizontal alignment of the popover. Default: "center". */
-  popoverAlign?: "left" | "center" | "right";
 };
 
 /**
- * On mobile shows a direct WhatsApp link; on desktop (≥md) shows a QR-code
- * popover so users can scan without having WhatsApp Web open.
+ * On mobile shows a direct WhatsApp link; on desktop (≥md) opens a centered
+ * modal with the QR code so visitors can scan without WhatsApp Web.
  * Detection is CSS-only — no JS, no hydration mismatch.
  */
-export function WhatsAppContact({
-  waUrl,
-  children,
-  className,
-  placement = "below",
-  popoverAlign = "center",
-}: Props) {
+export function WhatsAppContact({ waUrl, children, className }: Props) {
   const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
-    function onOutside(e: MouseEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onOutside);
-    return () => document.removeEventListener("mousedown", onOutside);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
   }, [open]);
-
-  const verticalClass =
-    placement === "above"
-      ? "bottom-[calc(100%+10px)]"
-      : "top-[calc(100%+10px)]";
-
-  const horizontalClass =
-    popoverAlign === "left"
-      ? "left-0"
-      : popoverAlign === "right"
-        ? "right-0"
-        : "left-1/2 -translate-x-1/2";
 
   return (
     <>
@@ -65,38 +47,59 @@ export function WhatsAppContact({
         {children}
       </a>
 
-      {/* Desktop: QR code popover */}
-      <div ref={wrapRef} className="relative hidden md:inline-block">
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className={cn("cursor-pointer", className)}
-        >
-          {children}
-        </button>
+      {/* Desktop: trigger button */}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={cn("hidden cursor-pointer md:inline-flex", className)}
+      >
+        {children}
+      </button>
 
-        {open && (
+      {/* Desktop: centered QR modal via portal */}
+      {open &&
+        mounted &&
+        createPortal(
           <div
-            className={cn(
-              "absolute z-50 w-52 rounded-sm border border-petroleum/10 bg-paper p-4 shadow-lg",
-              "flex flex-col items-center gap-3",
-              verticalClass,
-              horizontalClass,
-            )}
+            className="fixed inset-0 z-[70] flex items-center justify-center"
+            onClick={() => setOpen(false)}
           >
-            <Image
-              src="/assets/qr-whatsapp.jpeg"
-              alt="WhatsApp QR — Milo Estudio Creativo"
-              width={160}
-              height={160}
-              className="h-40 w-40 object-contain"
-            />
-            <p className="text-center text-[10px] uppercase leading-relaxed tracking-[0.16em] text-petroleum/60">
-              Escanea con tu celular para chatear
-            </p>
-          </div>
+            {/* backdrop */}
+            <div className="absolute inset-0 bg-petroleum/55 backdrop-blur-[2px]" />
+
+            {/* card */}
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="WhatsApp QR"
+              className="relative z-10 flex flex-col items-center gap-6 rounded-2xl bg-paper px-12 py-10 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Cerrar"
+                className="absolute right-5 top-5 cursor-pointer transition-opacity hover:opacity-50"
+              >
+                <X className="h-5 w-5 text-petroleum" />
+              </button>
+
+              <Image
+                src="/assets/qr-whatsapp.jpeg"
+                alt="WhatsApp QR — Milo Estudio Creativo"
+                width={260}
+                height={260}
+                className="h-64 w-64 object-contain"
+                priority
+              />
+
+              <p className="text-center text-[11px] uppercase leading-loose tracking-[0.22em] text-petroleum/60">
+                Escanea con tu celular para chatear
+              </p>
+            </div>
+          </div>,
+          document.body,
         )}
-      </div>
     </>
   );
 }
