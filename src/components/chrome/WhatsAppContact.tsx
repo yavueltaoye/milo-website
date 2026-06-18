@@ -114,11 +114,11 @@ export function WhatsAppContact({ waUrl, children, className }: Props) {
                   </button>
 
                   <Image
-                    src="/assets/iso-primary.png"
+                    src="/assets/logo-primary.png"
                     alt="Milo"
-                    width={2482}
+                    width={4933}
                     height={2216}
-                    className="h-8 w-auto select-none"
+                    className="h-7 w-auto select-none"
                   />
 
                   <div className="flex flex-col gap-1">
