@@ -325,6 +325,8 @@ a { color: var(--milo-petroleum); text-decoration: none; }
 .footer__col .t-eyebrow { margin-bottom:10px; }
 .footer__col a { color:var(--milo-petroleum); text-decoration:none; border-bottom:0; cursor:pointer; }
 .footer__col a:hover { opacity:.6; }
+.footer__col button { color:var(--milo-petroleum); background:transparent; border:0; padding:0; font-size:inherit; font-weight:inherit; cursor:pointer; }
+.footer__col button:hover { opacity:.6; }
 .footer__base { display:flex; justify-content:space-between; margin-top:64px; padding-top:22px; border-top:1px solid var(--milo-hairline); font-size:12px; letter-spacing:.08em; opacity:.6; }
 
 /* HOME (legacy editorial helpers kept for interior pages) */

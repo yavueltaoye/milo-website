@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { SITE } from "@/data/site";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { WhatsAppContact } from "@/components/chrome/WhatsAppContact";
 
 export function Footer() {
   return (
@@ -30,13 +31,13 @@ export function Footer() {
 
         <div className="footer__col">
           <span className="t-eyebrow">Contacto</span>
-          <a
-            href={buildWhatsAppUrl(SITE.whatsappPhone)}
-            target="_blank"
-            rel="noopener noreferrer"
+          <WhatsAppContact
+            waUrl={buildWhatsAppUrl(SITE.whatsappPhone)}
+            placement="above"
+            popoverAlign="left"
           >
             WhatsApp
-          </a>
+          </WhatsAppContact>
           <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
         </div>
 

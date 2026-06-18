@@ -7,6 +7,7 @@ import { PROJECT_TYPES } from "@/data/projects";
 import { SITE } from "@/data/site";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { MenuOverlay } from "@/components/chrome/MenuOverlay";
+import { WhatsAppContact } from "@/components/chrome/WhatsAppContact";
 import { cn } from "@/lib/utils";
 
 type NavHomeProps = {
@@ -15,14 +16,9 @@ type NavHomeProps = {
   onFilter: (type: string) => void;
 };
 
-const SECTIONS: { label: string; href: string; external?: boolean }[] = [
+const SECTIONS: { label: string; href: string }[] = [
   { label: "Sobre Nosotros", href: "/sobre-nosotros" },
   { label: "Diario", href: "/diario" },
-  {
-    label: "Contacto",
-    href: buildWhatsAppUrl(SITE.whatsappPhone),
-    external: true,
-  },
 ];
 
 /**
@@ -75,27 +71,19 @@ export function NavHome({ filter, onFilter }: NavHomeProps) {
         {/* Right — sections (desktop) + menu trigger (mobile). */}
         <div className="nav__end">
           <nav className="nav__sections" aria-label="Secciones del sitio">
-            {SECTIONS.map((section) =>
-              section.external ? (
-                <a
-                  key={section.label}
-                  href={section.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="nav__link"
-                >
-                  {section.label}
-                </a>
-              ) : (
-                <Link
-                  key={section.label}
-                  href={section.href}
-                  className="nav__link"
-                >
-                  {section.label}
-                </Link>
-              ),
-            )}
+            {SECTIONS.map((section) => (
+              <Link key={section.label} href={section.href} className="nav__link">
+                {section.label}
+              </Link>
+            ))}
+            <WhatsAppContact
+              waUrl={buildWhatsAppUrl(SITE.whatsappPhone)}
+              className="nav__link"
+              placement="below"
+              popoverAlign="right"
+            >
+              Contacto
+            </WhatsAppContact>
           </nav>
 
           <button

@@ -7,6 +7,7 @@ import { AtSign, Camera, Globe, Send, X } from "lucide-react";
 import { SITE } from "@/data/site";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { WhatsAppContact } from "@/components/chrome/WhatsAppContact";
 import { cn } from "@/lib/utils";
 
 type MenuOverlayProps = {
@@ -35,11 +36,6 @@ export function MenuOverlay({ open, onClose }: MenuOverlayProps) {
 
   const destinations: Destination[] = [
     { label: "Sobre Nosotros", href: "/sobre-nosotros" },
-    {
-      label: "Contacto",
-      href: buildWhatsAppUrl(SITE.whatsappPhone),
-      external: true,
-    },
   ];
 
   // Close on Escape and trap focus within the panel while open.
@@ -160,6 +156,14 @@ export function MenuOverlay({ open, onClose }: MenuOverlayProps) {
                   </Link>
                 ),
               )}
+              <WhatsAppContact
+                waUrl={buildWhatsAppUrl(SITE.whatsappPhone)}
+                className="text-3xl font-light tracking-tight transition-opacity duration-200 hover:opacity-60 md:text-[2.5rem]"
+                placement="below"
+                popoverAlign="left"
+              >
+                Contacto
+              </WhatsAppContact>
             </nav>
 
             <footer className="flex flex-col gap-6 pt-12">
