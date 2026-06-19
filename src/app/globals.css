@@ -405,14 +405,14 @@ a { color: var(--milo-petroleum); text-decoration: none; }
 .studio__cols { display:grid; grid-template-columns:repeat(3,1fr); gap:56px; padding:96px 0; border-top:1px solid var(--milo-petroleum); margin-top:96px; }
 .studio__cols div .t-eyebrow { display:block; margin-bottom:12px; }
 .studio__cols div p { font-size:15px; font-weight:300; line-height:1.6; margin:0; }
-.studio__teamhead { display:flex; justify-content:space-between; align-items:baseline; padding-bottom:22px; border-bottom:1px solid var(--milo-petroleum); margin-bottom:48px; font-size:12px; letter-spacing:.14em; text-transform:uppercase; opacity:.7; }
-.studio__teamgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:40px 32px; padding-bottom:96px; }
+.studio__teamhead { display:flex; justify-content:center; align-items:baseline; gap:24px; max-width:820px; margin:0 auto 48px; padding-bottom:22px; border-bottom:1px solid var(--milo-petroleum); font-size:12px; letter-spacing:.14em; text-transform:uppercase; opacity:.7; }
+.studio__teamgrid { display:grid; grid-template-columns:repeat(2,1fr); gap:40px 64px; max-width:820px; margin:0 auto; }
 .tmember { display:flex; flex-direction:column; gap:8px; }
 .tmember__photo { width:100%; aspect-ratio:1/1; background:var(--milo-ivory); display:block; filter:grayscale(1) contrast(1.02); object-fit:cover; }
 .tmember h3 { font-size:18px; font-weight:500; letter-spacing:-.01em; margin:12px 0 0; }
 .tmember .role { font-size:12px; letter-spacing:.14em; text-transform:uppercase; opacity:.7; }
 .tmember .bio { font-size:13px; font-weight:300; opacity:.75; margin-top:2px; }
-.studio__numbers { display:grid; grid-template-columns:repeat(5,1fr); gap:32px; padding:64px 0 0; border-top:1px solid var(--milo-petroleum); }
+.studio__numbers { display:grid; grid-template-columns:repeat(5,1fr); gap:32px; padding:64px 0; border-top:1px solid var(--milo-petroleum); border-bottom:1px solid var(--milo-petroleum); margin-bottom:48px; }
 /* min-width:0 lets the equal 1fr tracks shrink so long labels wrap instead of
    forcing the grid (and the page) wider than the viewport. */
 .studio__numbers div { display:flex; flex-direction:column; gap:8px; min-width:0; }
@@ -503,7 +503,7 @@ a { color: var(--milo-petroleum); text-decoration: none; }
   .studio__cols { grid-template-columns:1fr; gap:32px; padding:48px 0; margin-top:48px; }
   .studio__teamhead { margin-bottom:32px; }
   .studio__teamgrid { grid-template-columns:1fr; gap:40px; }
-  .studio__numbers { grid-template-columns:1fr 1fr; gap:32px 24px; padding-top:48px; }
+  .studio__numbers { grid-template-columns:1fr 1fr; gap:32px 24px; padding-top:48px; margin-bottom:32px; }
 
   /* Diario list: each entry stacks date / title / tag. */
   .journal__head { margin-bottom:48px; }
