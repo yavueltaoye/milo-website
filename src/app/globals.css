@@ -422,6 +422,26 @@ a { color: var(--milo-petroleum); text-decoration: none; }
 .studio__numbers .n { font-weight:200; font-size:clamp(40px,4.6vw,68px); line-height:1; letter-spacing:-.03em; color:var(--milo-petroleum); font-variant-numeric:tabular-nums; }
 .studio__numbers .l { font-size:12px; letter-spacing:.14em; text-transform:uppercase; opacity:.7; }
 
+/* Sobre nosotros — editorial image moment (full-width cinematic frame + credit). */
+.studio__momento { margin:88px 0; position:relative; }
+.studio__momento-img { width:100%; aspect-ratio:16/9; background:var(--milo-ivory); display:block; object-fit:cover; }
+.studio__momento-cap { position:absolute; left:0; bottom:0; padding:13px 20px; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--milo-ivory); background:color-mix(in oklab, var(--milo-petroleum) 78%, transparent); }
+.studio__momento.will-animate { opacity:0; transform:translateY(28px); transition:opacity .8s var(--ease-out), transform .8s var(--ease-out); }
+.studio__momento.will-animate.is-active { opacity:1; transform:none; }
+
+/* Sobre nosotros — asymmetric image + quote pairing ("la mirada"). */
+.studio__mirada { display:grid; grid-template-columns:5fr 7fr; gap:64px; align-items:center; padding:96px 0 0; }
+.studio__mirada-img { width:100%; aspect-ratio:4/5; background:var(--milo-ivory); display:block; object-fit:cover; }
+.studio__mirada-quote { display:flex; flex-direction:column; gap:22px; }
+.studio__mirada-quote .t-quote { margin:0; max-width:30ch; }
+.studio__mirada-quote .t-eyebrow { opacity:.7; }
+.studio__mirada.will-animate { opacity:0; transform:translateY(28px); transition:opacity .8s var(--ease-out), transform .8s var(--ease-out); }
+.studio__mirada.will-animate.is-active { opacity:1; transform:none; }
+
+/* Sobre nosotros — narrative bridge into the founders' profiles. */
+.studio__bridge { max-width:680px; margin:96px auto 0; text-align:center; }
+.studio__bridge p { font-size:18px; font-weight:300; line-height:1.55; margin:14px 0 0; }
+
 /* JOURNAL / DIARIO */
 .journal { padding:56px var(--gutter) 0; max-width:var(--container-wide); margin:0 auto; }
 .journal__head { display:flex; flex-direction:column; gap:18px; max-width:760px; margin-bottom:64px; }
@@ -468,6 +488,10 @@ a { color: var(--milo-petroleum); text-decoration: none; }
   .studio__cols { grid-template-columns:1fr 1fr; gap:40px; padding:64px 0; margin-top:64px; }
   .studio__teamgrid { grid-template-columns:1fr 1fr; gap:32px 28px; }
   .studio__numbers { grid-template-columns:1fr 1fr; gap:40px 28px; }
+  .studio__momento { margin:64px 0; }
+  .studio__mirada { grid-template-columns:1fr; gap:32px; padding-top:64px; }
+  .studio__mirada-img { aspect-ratio:16/10; }
+  .studio__bridge { margin-top:64px; }
 
   /* Footer: hero column spans, rest in two columns */
   .footer__grid { grid-template-columns:1fr 1fr; gap:40px 32px; }
@@ -504,6 +528,11 @@ a { color: var(--milo-petroleum); text-decoration: none; }
   .studio__teamhead { margin-bottom:32px; }
   .studio__teamgrid { grid-template-columns:1fr; gap:40px; }
   .studio__numbers { grid-template-columns:1fr 1fr; gap:32px 24px; padding-top:48px; margin-bottom:32px; }
+  .studio__momento { margin:48px 0; }
+  .studio__momento-cap { font-size:10px; padding:10px 14px; }
+  .studio__mirada { padding-top:48px; }
+  .studio__bridge { margin-top:48px; }
+  .studio__bridge p { font-size:16px; }
 
   /* Diario list: each entry stacks date / title / tag. */
   .journal__head { margin-bottom:48px; }
